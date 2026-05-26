@@ -6,7 +6,7 @@
   "scope": "/GigTrack/",
   "display": "standalone",
   "background_color": "#0a0f1e",
-  "theme_color": "#00d4aa",
+  "theme_color": "#0a0f1e",
   "orientation": "portrait",
   "icons": [
     {

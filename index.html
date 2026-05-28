@@ -156,11 +156,11 @@ select.form-input{appearance:none;cursor:pointer}
 .pb-ifood{background:rgba(240,79,94,.1);border:1px solid rgba(240,79,94,.2);color:var(--danger)}
 .pb-outro{background:rgba(59,158,255,.1);border:1px solid rgba(59,158,255,.2);color:var(--accent3)}
 
-/* REG TOGGLE */
-.reg-toggle{display:flex;gap:8px;margin-bottom:20px}
-.reg-btn{flex:1;padding:11px;border:1px solid var(--border);border-radius:var(--radius-sm);background:none;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:.2s;color:var(--text3);letter-spacing:-.1px}
-.reg-btn.g{border-color:rgba(0,212,170,.35);background:rgba(0,212,170,.08);color:var(--accent)}
-.reg-btn.r{border-color:rgba(240,79,94,.35);background:rgba(240,79,94,.08);color:var(--danger)}
+/* EXPENSE ROWS */
+.expense-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
+.expense-row:last-child{border-bottom:none}
+.expense-name{font-size:13px;font-weight:500;color:var(--text2);flex:1}
+.expense-input{width:120px;text-align:right;padding:10px 12px!important;font-size:14px!important}
 
 /* GOAL CARD */
 .goal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
@@ -300,14 +300,21 @@ select.form-input{appearance:none;cursor:pointer}
 
     <!-- REGISTRO -->
     <div class="page" id="page-registro">
-      <div class="page-header"><div class="page-title">Registrar</div></div>
-      <div class="card">
-        <div class="reg-toggle">
-          <button class="reg-btn g" id="reg-btn-ganho" onclick="window.setTipo('ganho')">↑ Ganho</button>
-          <button class="reg-btn" id="reg-btn-desp" onclick="window.setTipo('despesa')">↓ Despesa</button>
+      <div class="page-header">
+        <div>
+          <div class="page-title">Registrar Dia</div>
+          <div class="page-sub">Preencha tudo de uma vez</div>
         </div>
+      </div>
 
-        <div id="reg-plataforma">
+      <div class="card">
+        <div class="card-title">Data do registro</div>
+        <input type="date" class="form-input" id="reg-data">
+      </div>
+
+      <div class="card">
+        <div class="card-title">Ganhos</div>
+        <div class="form-group">
           <label class="form-label">Plataforma</label>
           <div class="chips" id="chips-plataforma">
             <div class="chip active" onclick="window.selectChip(this,'plataforma')">Uber</div>
@@ -317,42 +324,51 @@ select.form-input{appearance:none;cursor:pointer}
             <div class="chip" onclick="window.selectChip(this,'plataforma')">Outro</div>
           </div>
         </div>
-
-        <div id="reg-categoria" style="display:none">
-          <label class="form-label">Categoria</label>
-          <div class="chips" id="chips-categoria">
-            <div class="chip active" onclick="window.selectChip(this,'categoria')">Combustível</div>
-            <div class="chip" onclick="window.selectChip(this,'categoria')">Manutenção</div>
-            <div class="chip" onclick="window.selectChip(this,'categoria')">Lavagem</div>
-            <div class="chip" onclick="window.selectChip(this,'categoria')">App/Taxa</div>
-            <div class="chip" onclick="window.selectChip(this,'categoria')">Alimentação</div>
-            <div class="chip" onclick="window.selectChip(this,'categoria')">Outros</div>
-          </div>
-        </div>
-
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Valor (R$)</label>
+            <label class="form-label">Total ganho (R$)</label>
             <input type="text" class="form-input" id="reg-valor" placeholder="0,00" inputmode="numeric">
           </div>
-          <div class="form-group" id="reg-corridas-grp">
+          <div class="form-group">
             <label class="form-label">N° Corridas</label>
             <input type="number" class="form-input" id="reg-corridas" placeholder="1" min="1" value="1" inputmode="numeric">
           </div>
         </div>
-
-        <div class="form-group">
-          <label class="form-label">Data</label>
-          <input type="date" class="form-input" id="reg-data">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Observação (opcional)</label>
+          <input type="text" class="form-input" id="reg-obs" placeholder="Ex: turno noturno, chuva...">
         </div>
-
-        <div class="form-group">
-          <label class="form-label" id="reg-obs-label">Observação (opcional)</label>
-          <input type="text" class="form-input" id="reg-obs" placeholder="Ex: turno noturno">
-        </div>
-
-        <button class="btn btn-primary" id="reg-submit-btn" onclick="window.salvarRegistro()">Registrar Ganho</button>
       </div>
+
+      <div class="card">
+        <div class="card-title">Despesas do dia (opcional)</div>
+        <div class="expense-row">
+          <span class="expense-name">Combustível</span>
+          <input type="text" class="form-input expense-input" id="exp-comb" placeholder="0,00" inputmode="numeric">
+        </div>
+        <div class="expense-row">
+          <span class="expense-name">Manutenção</span>
+          <input type="text" class="form-input expense-input" id="exp-manut" placeholder="0,00" inputmode="numeric">
+        </div>
+        <div class="expense-row">
+          <span class="expense-name">Lavagem</span>
+          <input type="text" class="form-input expense-input" id="exp-lav" placeholder="0,00" inputmode="numeric">
+        </div>
+        <div class="expense-row">
+          <span class="expense-name">App / Taxa</span>
+          <input type="text" class="form-input expense-input" id="exp-taxa" placeholder="0,00" inputmode="numeric">
+        </div>
+        <div class="expense-row">
+          <span class="expense-name">Alimentação</span>
+          <input type="text" class="form-input expense-input" id="exp-alim" placeholder="0,00" inputmode="numeric">
+        </div>
+        <div class="expense-row">
+          <span class="expense-name">Outros</span>
+          <input type="text" class="form-input expense-input" id="exp-outros" placeholder="0,00" inputmode="numeric">
+        </div>
+      </div>
+
+      <button class="btn btn-primary" style="margin-bottom:16px" onclick="window.salvarDia()">Salvar Dia de Trabalho</button>
     </div>
 
     <!-- HISTÓRICO -->
@@ -573,20 +589,6 @@ window.showPage = (name,btn)=>{
   if(name==='historico') renderHistorico();
   if(name==='metas') renderMetas();
 };
-window.setTipo = (tipo)=>{
-  tipoRegistro=tipo;
-  const isG=tipo==='ganho';
-  document.getElementById('reg-btn-ganho').className='reg-btn'+(isG?' g':'');
-  document.getElementById('reg-btn-desp').className='reg-btn'+(!isG?' r':'');
-  document.getElementById('reg-plataforma').style.display=isG?'':'none';
-  document.getElementById('reg-categoria').style.display=isG?'none':'';
-  document.getElementById('reg-corridas-grp').style.display=isG?'':'none';
-  document.getElementById('reg-obs-label').textContent=isG?'Observação (opcional)':'Descrição (opcional)';
-  const btn=document.getElementById('reg-submit-btn');
-  btn.textContent=isG?'Registrar Ganho':'Registrar Despesa';
-  btn.style.background=isG?'var(--accent)':'var(--danger)';
-  btn.style.color=isG?'#000':'#fff';
-};
 window.selectChip = (el,group)=>{
   el.closest('.chips').querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
   el.classList.add('active'); selectedChips[group]=el.textContent.trim();
@@ -610,23 +612,35 @@ function readMoney(el){
 }
 
 // ── SAVE ──────────────────────────────────────────────────────────────────────
-window.salvarRegistro = ()=>{
+window.salvarDia = ()=>{
   if(!currentUser) return;
-  const valor=readMoney(document.getElementById('reg-valor'));
   const data=document.getElementById('reg-data').value||today();
+  const ganhoValor=readMoney(document.getElementById('reg-valor'));
   const obs=document.getElementById('reg-obs').value;
-  if(!valor||valor<=0){showToast('Informe um valor válido');return}
-  if(tipoRegistro==='ganho'){
-    const corridas=parseInt(document.getElementById('reg-corridas').value)||1;
-    addDoc(uCol('ganhos'),{plataforma:selectedChips.plataforma,valor,corridas,data,obs,ts:Date.now()});
-    showToast('✓ Ganho registrado!');
-  } else {
-    addDoc(uCol('despesas'),{categoria:selectedChips.categoria,valor,data,desc:obs,ts:Date.now()});
-    showToast('✓ Despesa registrada!');
+  const corridas=parseInt(document.getElementById('reg-corridas').value)||1;
+  const expenses=[
+    {id:'exp-comb',cat:'Combustível'},
+    {id:'exp-manut',cat:'Manutenção'},
+    {id:'exp-lav',cat:'Lavagem'},
+    {id:'exp-taxa',cat:'App/Taxa'},
+    {id:'exp-alim',cat:'Alimentação'},
+    {id:'exp-outros',cat:'Outros'},
+  ];
+  let saved=0;
+  if(ganhoValor>0){
+    addDoc(uCol('ganhos'),{plataforma:selectedChips.plataforma,valor:ganhoValor,corridas,data,obs,ts:Date.now()});
+    saved++;
   }
+  expenses.forEach(({id,cat})=>{
+    const v=readMoney(document.getElementById(id));
+    if(v>0){addDoc(uCol('despesas'),{categoria:cat,valor:v,data,desc:'',ts:Date.now()});saved++;}
+  });
+  if(!saved){showToast('Preencha pelo menos um valor');return}
   document.getElementById('reg-valor').value='';
   document.getElementById('reg-obs').value='';
   document.getElementById('reg-corridas').value='1';
+  expenses.forEach(({id})=>{document.getElementById(id).value='';});
+  showToast(`✓ ${saved} registro${saved>1?'s':''} salvos!`);
 };
 window.salvarMetas = ()=>{
   if(!currentUser) return;
@@ -791,8 +805,8 @@ function renderMetas(){
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 document.getElementById('reg-data').value=today();
-applyMoneyMask(document.getElementById('reg-valor'));
-applyMoneyMask(document.getElementById('goal-input-dash'));
+['reg-valor','exp-comb','exp-manut','exp-lav','exp-taxa','exp-alim','exp-outros','goal-input-dash']
+  .forEach(id=>{ const el=document.getElementById(id); if(el) applyMoneyMask(el); });
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>

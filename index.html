@@ -8,10 +8,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GigTrack">
-<link rel="apple-touch-icon" sizes="512x512" href="icon.png">
-<link rel="apple-touch-icon" sizes="192x192" href="icon.png">
+<link rel="apple-touch-icon" sizes="512x512" href="https://lucaseduardopvieira-byte.github.io/GigTrack/icon.png">
+<link rel="apple-touch-icon" sizes="192x192" href="https://lucaseduardopvieira-byte.github.io/GigTrack/icon.png">
 <link rel="manifest" href="/GigTrack/manifest.json">
-
 <meta name="apple-touch-fullscreen" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <title>GigTrack — Controle Financeiro</title>
@@ -42,6 +41,22 @@
 }
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font)}
 #app{height:100%;display:flex;flex-direction:column;max-width:430px;margin:0 auto;position:relative}
+
+/* LOGIN SCREEN */
+.login-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;padding:40px 32px}
+.login-logo{width:80px;height:80px;border-radius:20px;margin-bottom:24px;box-shadow:0 8px 32px rgba(0,212,170,.3)}
+.login-title{font-size:30px;font-weight:700;letter-spacing:-.5px;margin-bottom:8px}
+.login-sub{font-size:14px;color:var(--text2);text-align:center;margin-bottom:48px;line-height:1.6}
+.btn-google{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;background:#fff;color:#1a1a1a;border:none;border-radius:var(--radius-sm);padding:16px;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;transition:.2s}
+.btn-google:active{transform:scale(.98);opacity:.9}
+.login-note{font-size:11px;color:var(--text3);text-align:center;margin-top:20px;line-height:1.6}
+
+/* USER BAR */
+.user-bar{display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px}
+.user-bar img{width:28px;height:28px;border-radius:50%;border:2px solid var(--accent)}
+.user-bar-name{font-size:13px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-bar-btn{background:none;border:1px solid var(--border);border-radius:6px;color:var(--text3);font-family:var(--font);font-size:11px;padding:4px 10px;cursor:pointer;transition:.15s;flex-shrink:0}
+.user-bar-btn:active{color:var(--danger);border-color:var(--danger)}
 
 /* NAV */
 .nav{display:flex;background:var(--bg2);border-top:1px solid var(--border);padding:8px 0 12px;safe-area-inset-bottom:env(safe-area-inset-bottom)}
@@ -173,7 +188,20 @@ select.form-input{appearance:none;cursor:pointer}
 </style>
 </head>
 <body>
-<div id="app">
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" class="login-screen">
+  <img class="login-logo" src="icon.png" alt="GigTrack">
+  <div class="login-title">GigTrack</div>
+  <div class="login-sub">Controle financeiro para motoristas.<br>Seus dados sincronizados em todos os dispositivos.</div>
+  <button class="btn-google" onclick="signIn()">
+    <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/><path fill="#34A853" d="M6.3 14.7l7 5.1C15 16.1 19.1 13 24 13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 16.3 2 9.7 7.4 6.3 14.7z"/><path fill="#FBBC05" d="M24 46c5.5 0 10.5-1.9 14.3-5l-6.6-5.4C29.6 37 26.9 38 24 38c-6 0-11.1-4-12.9-9.5l-7 5.4C7.7 41.5 15.3 46 24 46z"/><path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.8 2.3-2.3 4.3-4.3 5.6l6.6 5.4C42.1 36.2 45 30.5 45 24c0-1.3-.2-2.7-.5-4z"/></svg>
+    Entrar com Google
+  </button>
+  <div class="login-note">Seus dados ficam salvos na sua conta Google<br>e sincronizam entre todos os seus dispositivos.</div>
+</div>
+
+<div id="app" style="visibility:hidden">
   <div class="pages" id="pages">
 
     <!-- DASHBOARD -->
@@ -184,6 +212,12 @@ select.form-input{appearance:none;cursor:pointer}
           <div class="page-sub" id="dash-period">Este mês</div>
         </div>
         <div class="badge" id="dash-badge">MÊS</div>
+      </div>
+
+      <div class="user-bar" id="user-bar">
+        <img id="user-avatar" src="" alt="">
+        <span class="user-bar-name" id="user-name"></span>
+        <button class="user-bar-btn" onclick="handleSignOut()">Sair</button>
       </div>
 
       <div class="hero" id="hero-block">
@@ -423,19 +457,124 @@ select.form-input{appearance:none;cursor:pointer}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
-// ── DATA ─────────────────────────────────────────────────────────────────────
-let data = JSON.parse(localStorage.getItem('mf_data') || '{"ganhos":[],"despesas":[],"metas":{"ganho_dia":300,"desp_dia":80,"ganho_mes":6000}}');
+// ── FIREBASE ──────────────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyCgvS2ZB8sYuKCE7MN7_ENM0S4a7R266g",
+  authDomain: "gigtrack-cf19c.firebaseapp.com",
+  projectId: "gigtrack-cf19c",
+  storageBucket: "gigtrack-cf19c.firebasestorage.app",
+  messagingSenderId: "30921363483",
+  appId: "1:30921363483:web:1283abc4b1289291e228be",
+  measurementId: "G-3QTWBGS851"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+db.enablePersistence().catch(()=>{});
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let currentUser = null;
+let data = {ganhos:[],despesas:[],metas:{ganho_dia:300,desp_dia:80,ganho_mes:6000}};
 let chartInstance = null;
 let tipoLancamento = 'ganho';
 let selectedChips = {plataforma:'Uber', categoria:'⛽ Combustível'};
 let histPeriod = 'hoje';
+let unsubscribers = [];
+let firstLoad = true;
 
-function save(){localStorage.setItem('mf_data',JSON.stringify(data))}
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+auth.onAuthStateChanged(user => {
+  if (user) {
+    currentUser = user;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.visibility = 'visible';
+    document.getElementById('user-name').textContent = user.displayName || user.email;
+    const av = document.getElementById('user-avatar');
+    if (user.photoURL) { av.src = user.photoURL; }
+    subscribeToData();
+  } else {
+    currentUser = null;
+    unsubscribers.forEach(u => u());
+    unsubscribers = [];
+    data = {ganhos:[],despesas:[],metas:{ganho_dia:300,desp_dia:80,ganho_mes:6000}};
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app').style.visibility = 'hidden';
+    firstLoad = true;
+  }
+});
 
+function signIn(){
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(e => {
+    if(e.code === 'auth/popup-blocked') auth.signInWithRedirect(provider);
+  });
+}
+
+function handleSignOut(){
+  if(confirm('Deseja sair da sua conta?')) auth.signOut();
+}
+
+// ── FIRESTORE SYNC ────────────────────────────────────────────────────────────
+function subscribeToData(){
+  const uid = currentUser.uid;
+
+  const unsubMetas = db.collection('users').doc(uid).collection('config').doc('metas')
+    .onSnapshot(doc => {
+      if(doc.exists) data.metas = doc.data();
+      renderDashboard();
+      renderMetas();
+    });
+
+  const unsubGanhos = db.collection('users').doc(uid).collection('ganhos')
+    .onSnapshot(snap => {
+      data.ganhos = snap.docs.map(d => ({id:d.id, ...d.data()}));
+      if(firstLoad && !snap.metadata.fromCache){
+        firstLoad = false;
+        if(snap.empty) migrateFromLocalStorage();
+      }
+      renderDashboard();
+      renderHistorico();
+    });
+
+  const unsubDespesas = db.collection('users').doc(uid).collection('despesas')
+    .onSnapshot(snap => {
+      data.despesas = snap.docs.map(d => ({id:d.id, ...d.data()}));
+      renderDashboard();
+      renderHistorico();
+    });
+
+  unsubscribers = [unsubMetas, unsubGanhos, unsubDespesas];
+}
+
+function migrateFromLocalStorage(){
+  const local = JSON.parse(localStorage.getItem('mf_data') || 'null');
+  if(!local || (!local.ganhos?.length && !local.despesas?.length)) return;
+  const uid = currentUser.uid;
+  const batch = db.batch();
+  (local.ganhos||[]).forEach(g => {
+    const {id, ...rest} = g;
+    batch.set(db.collection('users').doc(uid).collection('ganhos').doc(), {...rest, ts: id||Date.now()});
+  });
+  (local.despesas||[]).forEach(d => {
+    const {id, ...rest} = d;
+    batch.set(db.collection('users').doc(uid).collection('despesas').doc(), {...rest, ts: id||Date.now()});
+  });
+  if(local.metas){
+    batch.set(db.collection('users').doc(uid).collection('config').doc('metas'), local.metas);
+  }
+  batch.commit().then(() => {
+    localStorage.removeItem('mf_data');
+    showToast('✓ Dados migrados para a nuvem!');
+  });
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
 function fmt(v){return 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function fmtShort(v){return 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})}
-
 function today(){return new Date().toISOString().slice(0,10)}
 function thisMonth(){return new Date().toISOString().slice(0,7)}
 function thisWeekDates(){
@@ -444,21 +583,19 @@ function thisWeekDates(){
   const sun=new Date(mon); sun.setDate(mon.getDate()+6);
   return [mon.toISOString().slice(0,10), sun.toISOString().slice(0,10)];
 }
-
-function filterByPeriod(arr, period){
+function filterByPeriod(arr,period){
   if(period==='hoje') return arr.filter(x=>x.data===today());
   if(period==='semana'){const[s,e]=thisWeekDates();return arr.filter(x=>x.data>=s&&x.data<=e)}
-  if(period==='mes') return arr.filter(x=>x.data.startsWith(thisMonth()));
+  if(period==='mes') return arr.filter(x=>x.data&&x.data.startsWith(thisMonth()));
   return arr;
 }
-
 function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2200);
 }
 
-// ── NAVIGATION ───────────────────────────────────────────────────────────────
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
 function showPage(name,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
@@ -469,7 +606,7 @@ function showPage(name,btn){
   if(name==='metas') renderMetas();
 }
 
-// ── FORM HELPERS ─────────────────────────────────────────────────────────────
+// ── FORM HELPERS ──────────────────────────────────────────────────────────────
 function setTipoLancamento(tipo,btn){
   tipoLancamento=tipo;
   document.querySelectorAll('#tipo-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
@@ -477,13 +614,11 @@ function setTipoLancamento(tipo,btn){
   document.getElementById('form-ganho').style.display=tipo==='ganho'?'':'none';
   document.getElementById('form-despesa').style.display=tipo==='despesa'?'':'none';
 }
-
 function selectChip(el,group){
   el.closest('.chips').querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
   el.classList.add('active');
   selectedChips[group]=el.textContent.trim();
 }
-
 function setHistPeriod(p,btn){
   histPeriod=p;
   document.querySelectorAll('#hist-period-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
@@ -491,15 +626,17 @@ function setHistPeriod(p,btn){
   renderHistorico();
 }
 
-// ── SAVE ─────────────────────────────────────────────────────────────────────
+// ── SAVE ──────────────────────────────────────────────────────────────────────
 function salvarGanho(){
+  if(!currentUser) return;
   const v=parseFloat(document.getElementById('ganho-valor').value);
   const c=parseInt(document.getElementById('ganho-corridas').value)||1;
   const d=document.getElementById('ganho-data').value||today();
   const obs=document.getElementById('ganho-obs').value;
   if(!v||v<=0){showToast('Informe um valor válido');return}
-  data.ganhos.push({id:Date.now(),plataforma:selectedChips.plataforma,valor:v,corridas:c,data:d,obs});
-  save();
+  db.collection('users').doc(currentUser.uid).collection('ganhos').add({
+    plataforma:selectedChips.plataforma, valor:v, corridas:c, data:d, obs, ts:Date.now()
+  });
   document.getElementById('ganho-valor').value='';
   document.getElementById('ganho-obs').value='';
   document.getElementById('ganho-corridas').value='1';
@@ -507,34 +644,39 @@ function salvarGanho(){
 }
 
 function salvarDespesa(){
+  if(!currentUser) return;
   const v=parseFloat(document.getElementById('desp-valor').value);
   const d=document.getElementById('desp-data').value||today();
   const desc=document.getElementById('desp-desc').value;
   if(!v||v<=0){showToast('Informe um valor válido');return}
-  data.despesas.push({id:Date.now(),categoria:selectedChips.categoria,valor:v,data:d,desc});
-  save();
+  db.collection('users').doc(currentUser.uid).collection('despesas').add({
+    categoria:selectedChips.categoria, valor:v, data:d, desc, ts:Date.now()
+  });
   document.getElementById('desp-valor').value='';
   document.getElementById('desp-desc').value='';
   showToast('✓ Despesa registrada!');
 }
 
 function salvarMetas(){
+  if(!currentUser) return;
   const g=parseFloat(document.getElementById('meta-ganho-input').value);
   const d=parseFloat(document.getElementById('meta-desp-input').value);
   const m=parseFloat(document.getElementById('meta-mensal-input').value);
   if(g) data.metas.ganho_dia=g;
   if(d) data.metas.desp_dia=d;
   if(m) data.metas.ganho_mes=m;
-  save(); renderMetas(); showToast('✓ Metas salvas!');
+  db.collection('users').doc(currentUser.uid).collection('config').doc('metas').set(data.metas);
+  renderMetas();
+  showToast('✓ Metas salvas!');
 }
 
 function excluir(tipo,id){
-  if(tipo==='g') data.ganhos=data.ganhos.filter(x=>x.id!==id);
-  else data.despesas=data.despesas.filter(x=>x.id!==id);
-  save(); renderHistorico(); renderDashboard();
+  if(!currentUser) return;
+  const col = tipo==='g' ? 'ganhos' : 'despesas';
+  db.collection('users').doc(currentUser.uid).collection(col).doc(String(id)).delete();
 }
 
-// ── PLATFORM BADGE ───────────────────────────────────────────────────────────
+// ── PLATFORM BADGE ────────────────────────────────────────────────────────────
 function pbClass(p){
   const l=p.toLowerCase();
   if(l==='uber') return 'pb-uber';
@@ -543,7 +685,7 @@ function pbClass(p){
   return 'pb-outro';
 }
 
-// ── RENDER DASHBOARD ─────────────────────────────────────────────────────────
+// ── RENDER DASHBOARD ──────────────────────────────────────────────────────────
 function renderDashboard(){
   const gMes=filterByPeriod(data.ganhos,'mes');
   const dMes=filterByPeriod(data.despesas,'mes');
@@ -551,7 +693,7 @@ function renderDashboard(){
   const despesas=dMes.reduce((a,x)=>a+x.valor,0);
   const lucro=ganhos-despesas;
   const corridas=gMes.reduce((a,x)=>a+x.corridas,0);
-  const comb=dMes.filter(x=>x.categoria.includes('Combustível')).reduce((a,x)=>a+x.valor,0);
+  const comb=dMes.filter(x=>x.categoria&&x.categoria.includes('Combustível')).reduce((a,x)=>a+x.valor,0);
   const outras=despesas-comb;
 
   const mesNome=new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
@@ -573,9 +715,8 @@ function renderDashboard(){
   document.getElementById('meta-pct').textContent=pct+'%';
   document.getElementById('meta-fill').style.width=pct+'%';
 
-  // Recent list
   const all=[...data.ganhos.map(x=>({...x,tipo:'g'})),...data.despesas.map(x=>({...x,tipo:'d'}))]
-    .sort((a,b)=>b.id-a.id).slice(0,8);
+    .sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,8);
   const rl=document.getElementById('recent-list');
   if(!all.length){rl.innerHTML='<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Nenhum registro ainda</div></div>';return}
   rl.innerHTML=all.map(x=>{
@@ -592,7 +733,7 @@ function renderDashboard(){
   }).join('');
 }
 
-// ── RENDER HISTÓRICO ─────────────────────────────────────────────────────────
+// ── RENDER HISTÓRICO ──────────────────────────────────────────────────────────
 function renderHistorico(){
   const gP=filterByPeriod(data.ganhos,histPeriod);
   const dP=filterByPeriod(data.despesas,histPeriod);
@@ -601,7 +742,6 @@ function renderHistorico(){
   document.getElementById('hs-ganhos').textContent=fmt(ganhos);
   document.getElementById('hs-despesas').textContent=fmt(despesas);
 
-  // Build chart data - last 7 days
   const days=[]; const labels=[]; const vals=[];
   for(let i=6;i>=0;i--){
     const d=new Date(); d.setDate(d.getDate()-i);
@@ -634,9 +774,8 @@ function renderHistorico(){
     }
   });
 
-  // List
   const all=[...gP.map(x=>({...x,tipo:'g'})),...dP.map(x=>({...x,tipo:'d'}))]
-    .sort((a,b)=>b.id-a.id);
+    .sort((a,b)=>(b.ts||0)-(a.ts||0));
   const hl=document.getElementById('hist-list');
   if(!all.length){hl.innerHTML='<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Nenhum registro no período</div></div>';return}
   hl.innerHTML=all.map(x=>{
@@ -646,25 +785,25 @@ function renderHistorico(){
       <div class="item-meta">${x.corridas} corrida${x.corridas>1?'s':''} · ${x.obs||''} · ${x.data}</div></div>
       <div style="display:flex;align-items:center;gap:8px">
       <div class="item-amount g">${fmt(x.valor)}</div>
-      <button class="item-delete" onclick="excluir('g',${x.id})">✕</button></div></div>`;
+      <button class="item-delete" onclick="excluir('g','${x.id}')">✕</button></div></div>`;
     return `<div class="list-item">
       <div class="item-icon red">${x.categoria.split(' ')[0]}</div>
       <div class="item-info"><div class="item-name">${x.categoria.replace(/^[^\w]+ /,'')}</div>
       <div class="item-meta">${x.desc||''} · ${x.data}</div></div>
       <div style="display:flex;align-items:center;gap:8px">
       <div class="item-amount r">-${fmt(x.valor)}</div>
-      <button class="item-delete" onclick="excluir('d',${x.id})">✕</button></div></div>`;
+      <button class="item-delete" onclick="excluir('d','${x.id}')">✕</button></div></div>`;
   }).join('');
 }
 
-// ── RENDER METAS ─────────────────────────────────────────────────────────────
+// ── RENDER METAS ──────────────────────────────────────────────────────────────
 function renderMetas(){
   document.getElementById('meta-ganho-input').value=data.metas.ganho_dia;
   document.getElementById('meta-desp-input').value=data.metas.desp_dia;
   document.getElementById('meta-mensal-input').value=data.metas.ganho_mes;
 
-  const gMes=data.ganhos.filter(x=>x.data.startsWith(thisMonth())).reduce((a,x)=>a+x.valor,0);
-  const dMes=data.despesas.filter(x=>x.data.startsWith(thisMonth())).reduce((a,x)=>a+x.valor,0);
+  const gMes=data.ganhos.filter(x=>x.data&&x.data.startsWith(thisMonth())).reduce((a,x)=>a+x.valor,0);
+  const dMes=data.despesas.filter(x=>x.data&&x.data.startsWith(thisMonth())).reduce((a,x)=>a+x.valor,0);
   const limDesp=data.metas.desp_dia*30;
 
   const pct=Math.min(100,Math.round((gMes/data.metas.ganho_mes)*100));
@@ -676,9 +815,8 @@ function renderMetas(){
   document.getElementById('ms-ganho').textContent=fmt(gMes);
   document.getElementById('ms-falta').textContent=fmt(Math.max(0,data.metas.ganho_mes-gMes));
 
-  // Platform breakdown
   const plats={};
-  data.ganhos.filter(x=>x.data.startsWith(thisMonth())).forEach(x=>{
+  data.ganhos.filter(x=>x.data&&x.data.startsWith(thisMonth())).forEach(x=>{
     if(!plats[x.plataforma]) plats[x.plataforma]={total:0,corridas:0};
     plats[x.plataforma].total+=x.valor;
     plats[x.plataforma].corridas+=x.corridas;
@@ -705,12 +843,10 @@ function renderMetas(){
   }).join('');
 }
 
-// ── INIT ─────────────────────────────────────────────────────────────────────
+// ── INIT ──────────────────────────────────────────────────────────────────────
 document.getElementById('ganho-data').value=today();
 document.getElementById('desp-data').value=today();
-renderDashboard();
 
-// PWA install
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
 }

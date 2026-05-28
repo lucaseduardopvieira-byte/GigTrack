@@ -185,6 +185,7 @@ select.form-input{appearance:none;cursor:pointer}
     Entrar com Google
   </button>
   <div class="login-note">Seus dados ficam salvos na sua conta Google<br>e sincronizam entre todos os seus dispositivos.</div>
+  <div id="login-error" style="color:var(--danger);font-size:12px;text-align:center;margin-top:16px;padding:0 8px;word-break:break-all;min-height:16px"></div>
 </div>
 
 <div id="app" style="display:none">
@@ -391,14 +392,19 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 enableIndexedDbPersistence(db).catch(()=>{});
 
+function showLoginError(msg){
+  const el = document.getElementById('login-error');
+  if(el) el.textContent = msg;
+}
+
 // Processa retorno após redirect do Google
-getRedirectResult(auth).catch(e => {
-  if(e.code && e.code !== 'auth/no-auth-event'){
+getRedirectResult(auth)
+  .then(r => { if(r?.user) console.log('Redirect OK:', r.user.email); })
+  .catch(e => {
     document.getElementById('loading-screen').style.display = 'none';
     document.getElementById('login-screen').style.display = 'flex';
-    showToast('Erro: ' + e.code);
-  }
-});
+    showLoginError('Erro: ' + (e.code || e.message || String(e)));
+  });
 
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
@@ -436,8 +442,9 @@ onAuthStateChanged(auth, user => {
 });
 
 window.signIn = () => {
+  showLoginError('Redirecionando para o Google...');
   signInWithRedirect(auth, new GoogleAuthProvider()).catch(e => {
-    showToast('Erro: ' + e.code);
+    showLoginError('Erro ao iniciar login: ' + (e.code || e.message));
   });
 };
 window.handleSignOut = () => { if(confirm('Deseja sair da sua conta?')) fbSignOut(auth); };

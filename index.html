@@ -181,9 +181,9 @@ select.form-input{appearance:none;cursor:pointer}
       <div class="page-header">
         <div>
           <div class="page-title">Dashboard</div>
-          <div class="page-sub" id="dash-period">Hoje</div>
+          <div class="page-sub" id="dash-period">Este mês</div>
         </div>
-        <div class="badge" id="dash-badge">HOJ</div>
+        <div class="badge" id="dash-badge">MÊS</div>
       </div>
 
       <div class="hero" id="hero-block">
@@ -199,7 +199,7 @@ select.form-input{appearance:none;cursor:pointer}
             <div class="hero-meta-value r" id="hero-despesas">R$ 0,00</div>
           </div>
           <div class="hero-meta-item">
-            <div class="hero-meta-label">Corridas</div>
+            <div class="hero-meta-label">Corridas no Mês</div>
             <div class="hero-meta-value b" id="hero-corridas">0</div>
           </div>
         </div>
@@ -207,7 +207,7 @@ select.form-input{appearance:none;cursor:pointer}
 
       <div class="progress-wrap" id="meta-progress-wrap">
         <div class="progress-info">
-          <span class="progress-label">Meta do Dia</span>
+          <span class="progress-label">Meta do Mês</span>
           <span class="progress-pct" id="meta-pct">0%</span>
         </div>
         <div class="progress-track"><div class="progress-fill" id="meta-fill" style="width:0%"></div></div>
@@ -226,7 +226,7 @@ select.form-input{appearance:none;cursor:pointer}
         </div>
         <div class="stat">
           <div class="stat-icon blue">⏱</div>
-          <div class="stat-label">Corridas Hoje</div>
+          <div class="stat-label">Corridas no Mês</div>
           <div class="stat-value b" id="stat-corridas-hoje">0</div>
         </div>
         <div class="stat">
@@ -545,14 +545,18 @@ function pbClass(p){
 
 // ── RENDER DASHBOARD ─────────────────────────────────────────────────────────
 function renderDashboard(){
-  const gHoje=filterByPeriod(data.ganhos,'hoje');
-  const dHoje=filterByPeriod(data.despesas,'hoje');
-  const ganhos=gHoje.reduce((a,x)=>a+x.valor,0);
-  const despesas=dHoje.reduce((a,x)=>a+x.valor,0);
+  const gMes=filterByPeriod(data.ganhos,'mes');
+  const dMes=filterByPeriod(data.despesas,'mes');
+  const ganhos=gMes.reduce((a,x)=>a+x.valor,0);
+  const despesas=dMes.reduce((a,x)=>a+x.valor,0);
   const lucro=ganhos-despesas;
-  const corridas=gHoje.reduce((a,x)=>a+x.corridas,0);
-  const comb=dHoje.filter(x=>x.categoria.includes('Combustível')).reduce((a,x)=>a+x.valor,0);
+  const corridas=gMes.reduce((a,x)=>a+x.corridas,0);
+  const comb=dMes.filter(x=>x.categoria.includes('Combustível')).reduce((a,x)=>a+x.valor,0);
   const outras=despesas-comb;
+
+  const mesNome=new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  document.getElementById('dash-period').textContent=mesNome.charAt(0).toUpperCase()+mesNome.slice(1);
+  document.getElementById('dash-badge').textContent=new Date().toLocaleDateString('pt-BR',{month:'short'}).toUpperCase().replace('.','');
 
   document.getElementById('hero-lucro').textContent=fmt(lucro);
   document.getElementById('hero-lucro').className='hero-value'+(lucro<0?' negative':'');
@@ -564,7 +568,7 @@ function renderDashboard(){
   document.getElementById('stat-corridas-hoje').textContent=corridas;
   document.getElementById('stat-outras').textContent=fmtShort(outras);
 
-  const meta=data.metas.ganho_dia;
+  const meta=data.metas.ganho_mes;
   const pct=Math.min(100,Math.round((ganhos/meta)*100));
   document.getElementById('meta-pct').textContent=pct+'%';
   document.getElementById('meta-fill').style.width=pct+'%';

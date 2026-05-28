@@ -382,7 +382,7 @@ select.form-input{appearance:none;cursor:pointer}
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut as fbSignOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, signOut as fbSignOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc, setDoc, addDoc, deleteDoc, onSnapshot, writeBatch, enableIndexedDbPersistence } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import Chart from 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/+esm';
 
@@ -404,14 +404,6 @@ function showLoginError(msg){
   if(el) el.textContent = msg;
 }
 
-// Processa retorno após redirect do Google
-getRedirectResult(auth)
-  .then(r => { if(r?.user) console.log('Redirect OK:', r.user.email); })
-  .catch(e => {
-    document.getElementById('loading-screen').style.display = 'none';
-    document.getElementById('login-screen').style.display = 'flex';
-    showLoginError('Erro: ' + (e.code || e.message || String(e)));
-  });
 
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
@@ -449,9 +441,14 @@ onAuthStateChanged(auth, user => {
 });
 
 window.signIn = () => {
-  showLoginError('Redirecionando para o Google...');
-  signInWithRedirect(auth, new GoogleAuthProvider()).catch(e => {
-    showLoginError('Erro ao iniciar login: ' + (e.code || e.message));
+  showLoginError('');
+  const provider = new GoogleAuthProvider();
+  signInWithPopup(auth, provider).catch(e => {
+    if(e.code === 'auth/popup-blocked') {
+      signInWithRedirect(auth, provider);
+    } else if(e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') {
+      showLoginError('Erro: ' + (e.code || e.message));
+    }
   });
 };
 window.handleSignOut = () => { if(confirm('Deseja sair da sua conta?')) fbSignOut(auth); };

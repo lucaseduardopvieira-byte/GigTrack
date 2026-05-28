@@ -374,7 +374,7 @@ select.form-input{appearance:none;cursor:pointer}
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut as fbSignOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, signOut as fbSignOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc, setDoc, addDoc, deleteDoc, onSnapshot, writeBatch, enableIndexedDbPersistence } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import Chart from 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/+esm';
 
@@ -391,14 +391,6 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 enableIndexedDbPersistence(db).catch(()=>{});
 
-// Processa retorno do redirect de login
-getRedirectResult(auth).catch(e => {
-  if(e.code && e.code !== 'auth/no-auth-event'){
-    document.getElementById('loading-screen').style.display = 'none';
-    document.getElementById('login-screen').style.display = 'flex';
-    showToast('Erro no login: ' + e.code);
-  }
-});
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let currentUser = null;
@@ -436,7 +428,13 @@ onAuthStateChanged(auth, user => {
 
 window.signIn = () => {
   const p = new GoogleAuthProvider();
-  signInWithRedirect(auth, p);
+  signInWithPopup(auth, p).catch(e => {
+    if(e.code === 'auth/popup-blocked') {
+      signInWithRedirect(auth, p);
+    } else if(e.code !== 'auth/popup-closed-by-user') {
+      showToast('Erro: ' + e.code);
+    }
+  });
 };
 window.handleSignOut = () => { if(confirm('Deseja sair da sua conta?')) fbSignOut(auth); };
 

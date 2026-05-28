@@ -156,6 +156,20 @@ select.form-input{appearance:none;cursor:pointer}
 .pb-ifood{background:rgba(240,79,94,.1);border:1px solid rgba(240,79,94,.2);color:var(--danger)}
 .pb-outro{background:rgba(59,158,255,.1);border:1px solid rgba(59,158,255,.2);color:var(--accent3)}
 
+/* GOAL CARD */
+.goal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.goal-edit-btn{background:none;border:1px solid var(--border);border-radius:6px;color:var(--text3);font-family:var(--font);font-size:11px;padding:4px 10px;cursor:pointer;transition:.15s;font-weight:500}
+.goal-edit-btn:active{border-color:var(--accent);color:var(--accent)}
+.goal-amount{font-size:30px;font-weight:700;letter-spacing:-1px;color:var(--text);margin-bottom:14px}
+.goal-amount.undefined{font-size:18px;color:var(--text3);font-weight:500;letter-spacing:0}
+.goal-row{display:flex;margin-top:12px}
+.goal-row>div{flex:1}
+.goal-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;font-weight:500}
+.goal-val{font-size:15px;font-weight:600;letter-spacing:-.3px;color:var(--text2)}
+.goal-val.g{color:var(--accent)}
+.stat-icon svg{width:15px;height:15px;display:block}
+.item-icon svg{width:16px;height:16px;display:block}
+
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .page.active .card,.page.active .hero,.page.active .stats{animation:fadeIn .25s ease both}
 </style>
@@ -230,24 +244,51 @@ select.form-input{appearance:none;cursor:pointer}
         </div>
       </div>
 
-      <div class="progress-wrap">
-        <div class="progress-info">
-          <span class="progress-label">Meta do Mês</span>
-          <span class="progress-pct" id="meta-pct">0%</span>
+      <div class="card" id="goal-card">
+        <div class="goal-head">
+          <span class="card-title" style="margin-bottom:0">Meta de Faturamento</span>
+          <button class="goal-edit-btn" id="goal-edit-btn" onclick="window.toggleGoalEdit()">Definir</button>
         </div>
-        <div class="progress-track"><div class="progress-fill" id="meta-fill" style="width:0%"></div></div>
+        <div id="goal-view">
+          <div class="goal-amount undefined" id="goal-amount-display">Nenhuma meta definida</div>
+          <div class="progress-track"><div class="progress-fill" id="goal-bar" style="width:0%"></div></div>
+          <div class="goal-row">
+            <div><div class="goal-lbl">Realizado</div><div class="goal-val g" id="goal-real">R$ 0</div></div>
+            <div><div class="goal-lbl">Faltam</div><div class="goal-val" id="goal-left">—</div></div>
+            <div><div class="goal-lbl">Concluído</div><div class="goal-val g" id="goal-pct-val">—</div></div>
+          </div>
+        </div>
+        <div id="goal-form" style="display:none">
+          <div class="form-group" style="margin-bottom:10px">
+            <label class="form-label">Meta mensal de faturamento (R$)</label>
+            <input type="number" class="form-input" id="goal-input-dash" placeholder="Ex: 6000" inputmode="numeric">
+          </div>
+          <button class="btn btn-primary" style="font-size:14px;padding:12px" onclick="window.saveGoalDash()">Salvar Meta</button>
+        </div>
       </div>
 
       <div class="stats">
-        <div class="stat"><div class="stat-icon green">🚗</div><div class="stat-label">Ganho/Corrida</div><div class="stat-value g" id="stat-por-corrida">R$ 0</div></div>
-        <div class="stat"><div class="stat-icon yellow">⛽</div><div class="stat-label">Combustível</div><div class="stat-value y" id="stat-combustivel">R$ 0</div></div>
-        <div class="stat"><div class="stat-icon blue">⏱</div><div class="stat-label">Corridas no Mês</div><div class="stat-value b" id="stat-corridas-mes">0</div></div>
-        <div class="stat"><div class="stat-icon red">💸</div><div class="stat-label">Outras Despesas</div><div class="stat-value r" id="stat-outras">R$ 0</div></div>
+        <div class="stat">
+          <div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+          <div class="stat-label">Ganho/Corrida</div><div class="stat-value g" id="stat-por-corrida">R$ 0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-icon yellow"><svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg></div>
+          <div class="stat-label">Combustível</div><div class="stat-value y" id="stat-combustivel">R$ 0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="#3b9eff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg></div>
+          <div class="stat-label">Corridas no Mês</div><div class="stat-value b" id="stat-corridas-mes">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="#f04f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>
+          <div class="stat-label">Outras Despesas</div><div class="stat-value r" id="stat-outras">R$ 0</div>
+        </div>
       </div>
 
       <div class="section-header"><span class="section-title">Últimas transações</span></div>
       <div class="card" id="recent-list">
-        <div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Nenhum registro ainda</div></div>
+        <div class="empty"><div class="empty-text">Nenhum registro ainda</div></div>
       </div>
     </div>
 
@@ -575,6 +616,29 @@ window.excluir = (tipo,id)=>{
   if(!currentUser) return;
   deleteDoc(uDoc(tipo==='g'?'ganhos':'despesas',String(id)));
 };
+window.toggleGoalEdit = ()=>{
+  const view=document.getElementById('goal-view');
+  const form=document.getElementById('goal-form');
+  const btn=document.getElementById('goal-edit-btn');
+  const editing=form.style.display!=='none';
+  view.style.display=editing?'':'none';
+  form.style.display=editing?'none':'';
+  btn.textContent=editing?(data.metas.ganho_mes?'Editar':'Definir'):'Cancelar';
+  if(!editing){
+    document.getElementById('goal-input-dash').value=data.metas.ganho_mes||'';
+    document.getElementById('goal-input-dash').focus();
+  }
+};
+window.saveGoalDash = ()=>{
+  if(!currentUser) return;
+  const v=parseFloat(document.getElementById('goal-input-dash').value);
+  if(!v||v<=0){showToast('Informe um valor válido');return}
+  data.metas.ganho_mes=v;
+  setDoc(uDoc('config','metas'),data.metas);
+  window.toggleGoalEdit();
+  renderDashboard();
+  showToast('✓ Meta atualizada!');
+};
 
 // ── RENDER DASHBOARD ──────────────────────────────────────────────────────────
 function renderDashboard(){
@@ -599,17 +663,28 @@ function renderDashboard(){
   document.getElementById('stat-corridas-mes').textContent=corridas;
   document.getElementById('stat-outras').textContent=fmtShort(despesas-comb);
 
-  const pct=Math.min(100,Math.round((ganhos/data.metas.ganho_mes)*100));
-  document.getElementById('meta-pct').textContent=pct+'%';
-  document.getElementById('meta-fill').style.width=pct+'%';
+  const meta=data.metas.ganho_mes||0;
+  const goalPct=meta>0?Math.min(100,Math.round((ganhos/meta)*100)):0;
+  const goalLeft=meta>0?Math.max(0,meta-ganhos):null;
+  const amtEl=document.getElementById('goal-amount-display');
+  amtEl.textContent=meta>0?fmt(meta):'Nenhuma meta definida';
+  amtEl.className='goal-amount'+(meta>0?'':' undefined');
+  document.getElementById('goal-bar').style.width=goalPct+'%';
+  document.getElementById('goal-real').textContent=fmt(ganhos);
+  document.getElementById('goal-left').textContent=goalLeft!==null?fmt(goalLeft):'—';
+  document.getElementById('goal-pct-val').textContent=meta>0?goalPct+'%':'—';
+  document.getElementById('goal-edit-btn').textContent=meta>0?'Editar':'Definir';
 
+  const svgUp=`<svg viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>`;
+  const svgDown=`<svg viewBox="0 0 24 24" fill="none" stroke="#f04f5e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>`;
   const all=[...data.ganhos.map(x=>({...x,tipo:'g'})),...data.despesas.map(x=>({...x,tipo:'d'}))]
     .sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,8);
   const rl=document.getElementById('recent-list');
-  if(!all.length){rl.innerHTML='<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Nenhum registro ainda</div></div>';return}
+  if(!all.length){rl.innerHTML='<div class="empty"><div class="empty-text">Nenhum registro ainda</div></div>';return}
   rl.innerHTML=all.map(x=>{
-    if(x.tipo==='g') return `<div class="list-item"><div class="item-icon green">🚗</div><div class="item-info"><div class="item-name">${x.plataforma} <span class="platform-badge ${pbClass(x.plataforma)}">${x.plataforma}</span></div><div class="item-meta">${x.corridas} corrida${x.corridas>1?'s':''} · ${x.data}</div></div><div class="item-amount g">${fmt(x.valor)}</div></div>`;
-    return `<div class="list-item"><div class="item-icon red">${x.categoria.split(' ')[0]}</div><div class="item-info"><div class="item-name">${x.categoria.replace(/^[^\w]+ /,'')}</div><div class="item-meta">${x.desc||''} · ${x.data}</div></div><div class="item-amount r">-${fmt(x.valor)}</div></div>`;
+    if(x.tipo==='g') return `<div class="list-item"><div class="item-icon green">${svgUp}</div><div class="item-info"><div class="item-name">${x.plataforma} <span class="platform-badge ${pbClass(x.plataforma)}">${x.plataforma}</span></div><div class="item-meta">${x.corridas} corrida${x.corridas>1?'s':''} · ${x.data}</div></div><div class="item-amount g">${fmt(x.valor)}</div></div>`;
+    const cat=x.categoria.replace(/^[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}]\s*/u,'');
+    return `<div class="list-item"><div class="item-icon red">${svgDown}</div><div class="item-info"><div class="item-name">${cat}</div><div class="item-meta">${x.desc||''} · ${x.data}</div></div><div class="item-amount r">-${fmt(x.valor)}</div></div>`;
   }).join('');
 }
 
@@ -641,13 +716,16 @@ function renderHistorico(){
       y:{ticks:{color:'#8899b0',font:{size:11},callback:v=>'R$'+Math.round(v)},grid:{color:'rgba(255,255,255,.05)'}}}}
   });
 
+  const svgUp=`<svg viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>`;
+  const svgDown=`<svg viewBox="0 0 24 24" fill="none" stroke="#f04f5e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>`;
   const all=[...gP.map(x=>({...x,tipo:'g'})),...dP.map(x=>({...x,tipo:'d'}))]
     .sort((a,b)=>(b.ts||0)-(a.ts||0));
   const hl=document.getElementById('hist-list');
-  if(!all.length){hl.innerHTML='<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Nenhum registro no período</div></div>';return}
+  if(!all.length){hl.innerHTML='<div class="empty"><div class="empty-text">Nenhum registro no período</div></div>';return}
   hl.innerHTML=all.map(x=>{
-    if(x.tipo==='g') return `<div class="list-item"><div class="item-icon green">🚗</div><div class="item-info"><div class="item-name">${x.plataforma}</div><div class="item-meta">${x.corridas} corrida${x.corridas>1?'s':''} · ${x.obs||''} · ${x.data}</div></div><div style="display:flex;align-items:center;gap:8px"><div class="item-amount g">${fmt(x.valor)}</div><button class="item-delete" onclick="window.excluir('g','${x.id}')">✕</button></div></div>`;
-    return `<div class="list-item"><div class="item-icon red">${x.categoria.split(' ')[0]}</div><div class="item-info"><div class="item-name">${x.categoria.replace(/^[^\w]+ /,'')}</div><div class="item-meta">${x.desc||''} · ${x.data}</div></div><div style="display:flex;align-items:center;gap:8px"><div class="item-amount r">-${fmt(x.valor)}</div><button class="item-delete" onclick="window.excluir('d','${x.id}')">✕</button></div></div>`;
+    if(x.tipo==='g') return `<div class="list-item"><div class="item-icon green">${svgUp}</div><div class="item-info"><div class="item-name">${x.plataforma}</div><div class="item-meta">${x.corridas} corrida${x.corridas>1?'s':''} · ${x.obs||''} · ${x.data}</div></div><div style="display:flex;align-items:center;gap:8px"><div class="item-amount g">${fmt(x.valor)}</div><button class="item-delete" onclick="window.excluir('g','${x.id}')">✕</button></div></div>`;
+    const cat=x.categoria.replace(/^[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}]\s*/u,'');
+    return `<div class="list-item"><div class="item-icon red">${svgDown}</div><div class="item-info"><div class="item-name">${cat}</div><div class="item-meta">${x.desc||''} · ${x.data}</div></div><div style="display:flex;align-items:center;gap:8px"><div class="item-amount r">-${fmt(x.valor)}</div><button class="item-delete" onclick="window.excluir('d','${x.id}')">✕</button></div></div>`;
   }).join('');
 }
 

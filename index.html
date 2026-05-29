@@ -324,47 +324,23 @@ select.form-input{appearance:none;cursor:pointer}
             <div class="chip" onclick="window.selectChip(this,'plataforma')">Outro</div>
           </div>
         </div>
-        <div class="form-row">
-          <div class="form-group">
+        <div class="form-row" style="margin-bottom:0">
+          <div class="form-group" style="margin-bottom:0">
             <label class="form-label">Total ganho (R$)</label>
             <input type="text" class="form-input" id="reg-valor" placeholder="0,00" inputmode="numeric">
           </div>
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom:0">
             <label class="form-label">N° Corridas</label>
             <input type="number" class="form-input" id="reg-corridas" placeholder="1" min="1" value="1" inputmode="numeric">
           </div>
         </div>
-        <div class="form-group" style="margin-bottom:0">
-          <label class="form-label">Observação (opcional)</label>
-          <input type="text" class="form-input" id="reg-obs" placeholder="Ex: turno noturno, chuva...">
-        </div>
       </div>
 
       <div class="card">
-        <div class="card-title">Despesas do dia (opcional)</div>
-        <div class="expense-row">
+        <div class="card-title">Despesa do dia (opcional)</div>
+        <div class="expense-row" style="border:none;padding:0">
           <span class="expense-name">Combustível</span>
           <input type="text" class="form-input expense-input" id="exp-comb" placeholder="0,00" inputmode="numeric">
-        </div>
-        <div class="expense-row">
-          <span class="expense-name">Manutenção</span>
-          <input type="text" class="form-input expense-input" id="exp-manut" placeholder="0,00" inputmode="numeric">
-        </div>
-        <div class="expense-row">
-          <span class="expense-name">Lavagem</span>
-          <input type="text" class="form-input expense-input" id="exp-lav" placeholder="0,00" inputmode="numeric">
-        </div>
-        <div class="expense-row">
-          <span class="expense-name">App / Taxa</span>
-          <input type="text" class="form-input expense-input" id="exp-taxa" placeholder="0,00" inputmode="numeric">
-        </div>
-        <div class="expense-row">
-          <span class="expense-name">Alimentação</span>
-          <input type="text" class="form-input expense-input" id="exp-alim" placeholder="0,00" inputmode="numeric">
-        </div>
-        <div class="expense-row">
-          <span class="expense-name">Outros</span>
-          <input type="text" class="form-input expense-input" id="exp-outros" placeholder="0,00" inputmode="numeric">
         </div>
       </div>
 
@@ -618,28 +594,20 @@ window.salvarDia = ()=>{
   const ganhoValor=readMoney(document.getElementById('reg-valor'));
   const obs=document.getElementById('reg-obs').value;
   const corridas=parseInt(document.getElementById('reg-corridas').value)||1;
-  const expenses=[
-    {id:'exp-comb',cat:'Combustível'},
-    {id:'exp-manut',cat:'Manutenção'},
-    {id:'exp-lav',cat:'Lavagem'},
-    {id:'exp-taxa',cat:'App/Taxa'},
-    {id:'exp-alim',cat:'Alimentação'},
-    {id:'exp-outros',cat:'Outros'},
-  ];
+  const combValor=readMoney(document.getElementById('exp-comb'));
   let saved=0;
   if(ganhoValor>0){
-    addDoc(uCol('ganhos'),{plataforma:selectedChips.plataforma,valor:ganhoValor,corridas,data,obs,ts:Date.now()});
+    addDoc(uCol('ganhos'),{plataforma:selectedChips.plataforma,valor:ganhoValor,corridas,data,obs:'',ts:Date.now()});
     saved++;
   }
-  expenses.forEach(({id,cat})=>{
-    const v=readMoney(document.getElementById(id));
-    if(v>0){addDoc(uCol('despesas'),{categoria:cat,valor:v,data,desc:'',ts:Date.now()});saved++;}
-  });
+  if(combValor>0){
+    addDoc(uCol('despesas'),{categoria:'Combustível',valor:combValor,data,desc:'',ts:Date.now()});
+    saved++;
+  }
   if(!saved){showToast('Preencha pelo menos um valor');return}
   document.getElementById('reg-valor').value='';
-  document.getElementById('reg-obs').value='';
   document.getElementById('reg-corridas').value='1';
-  expenses.forEach(({id})=>{document.getElementById(id).value='';});
+  document.getElementById('exp-comb').value='';
   showToast(`✓ ${saved} registro${saved>1?'s':''} salvos!`);
 };
 window.salvarMetas = ()=>{
@@ -805,7 +773,7 @@ function renderMetas(){
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 document.getElementById('reg-data').value=today();
-['reg-valor','exp-comb','exp-manut','exp-lav','exp-taxa','exp-alim','exp-outros','goal-input-dash']
+['reg-valor','exp-comb','goal-input-dash']
   .forEach(id=>{ const el=document.getElementById(id); if(el) applyMoneyMask(el); });
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>

@@ -301,6 +301,25 @@ select.form-input{appearance:none;cursor:pointer}
         </div>
       </div>
 
+      <div class="stats" id="stats-km-horas" style="display:none">
+        <div class="stat">
+          <div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="#3b9eff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="stat-label">Km no Mês</div><div class="stat-value b" id="stat-km-total">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+          <div class="stat-label">R$ por Hora</div><div class="stat-value g" id="stat-por-hora">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-icon yellow"><svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M3.6 9h16.8M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18M12.5 3a17 17 0 0 1 0 18"/></svg></div>
+          <div class="stat-label">Km / Corrida</div><div class="stat-value y" id="stat-km-corrida">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="#3b9eff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+          <div class="stat-label">Horas no Mês</div><div class="stat-value b" id="stat-horas-total">—</div>
+        </div>
+      </div>
+
       <div class="section-header"><span class="section-title">Últimas transações</span></div>
       <div class="card" id="recent-list">
         <div class="empty"><div class="empty-text">Nenhum registro ainda</div></div>
@@ -333,7 +352,7 @@ select.form-input{appearance:none;cursor:pointer}
             <div class="chip" onclick="window.selectChip(this,'plataforma')">Outro</div>
           </div>
         </div>
-        <div class="form-row" style="margin-bottom:0">
+        <div class="form-row">
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label">Total ganho (R$)</label>
             <input type="text" class="form-input" id="reg-valor" placeholder="0,00" inputmode="numeric">
@@ -341,6 +360,16 @@ select.form-input{appearance:none;cursor:pointer}
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label">N° Corridas</label>
             <input type="number" class="form-input" id="reg-corridas" placeholder="1" min="1" value="1" inputmode="numeric">
+          </div>
+        </div>
+        <div class="form-row" style="margin-top:10px;margin-bottom:0">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Km rodados <span style="color:var(--text3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">opcional</span></label>
+            <input type="number" class="form-input" id="reg-km" placeholder="0" min="0" inputmode="decimal">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Horas trabalhadas <span style="color:var(--text3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">opcional</span></label>
+            <input type="number" class="form-input" id="reg-horas" placeholder="0" min="0" step="0.5" inputmode="decimal">
           </div>
         </div>
       </div>
@@ -374,6 +403,10 @@ select.form-input{appearance:none;cursor:pointer}
       </div>
       <div class="section-header"><span class="section-title">Transações</span></div>
       <div class="card" id="hist-list"><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Nenhum registro</div></div></div>
+      <button class="btn" style="margin-bottom:16px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);display:flex;align-items:center;justify-content:center;gap:8px" onclick="window.exportarCSV()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar relatório CSV
+      </button>
     </div>
 
     <!-- FINANÇAS -->
@@ -637,23 +670,29 @@ function readMoney(el){
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 window.salvarDia = ()=>{
   if(!currentUser) return;
-  const data=document.getElementById('reg-data').value||today();
+  const dataVal=document.getElementById('reg-data').value||today();
   const ganhoValor=readMoney(document.getElementById('reg-valor'));
-  const obs=document.getElementById('reg-obs').value;
   const corridas=parseInt(document.getElementById('reg-corridas').value)||1;
+  const km=parseFloat(document.getElementById('reg-km').value)||0;
+  const horas=parseFloat(document.getElementById('reg-horas').value)||0;
   const combValor=readMoney(document.getElementById('exp-comb'));
   let saved=0;
   if(ganhoValor>0){
-    addDoc(uCol('ganhos'),{plataforma:selectedChips.plataforma,valor:ganhoValor,corridas,data,obs:'',ts:Date.now()});
+    const rec={plataforma:selectedChips.plataforma,valor:ganhoValor,corridas,data:dataVal,obs:'',ts:Date.now()};
+    if(km>0) rec.km=km;
+    if(horas>0) rec.horas=horas;
+    addDoc(uCol('ganhos'),rec);
     saved++;
   }
   if(combValor>0){
-    addDoc(uCol('despesas'),{categoria:'Combustível',valor:combValor,data,desc:'',ts:Date.now()});
+    addDoc(uCol('despesas'),{categoria:'Combustível',valor:combValor,data:dataVal,desc:'',ts:Date.now()});
     saved++;
   }
   if(!saved){showToast('Preencha pelo menos um valor');return}
   document.getElementById('reg-valor').value='';
   document.getElementById('reg-corridas').value='1';
+  document.getElementById('reg-km').value='';
+  document.getElementById('reg-horas').value='';
   document.getElementById('exp-comb').value='';
   showToast(`✓ ${saved} registro${saved>1?'s':''} salvos!`);
 };
@@ -707,6 +746,19 @@ function renderDashboard(){
   document.getElementById('stat-combustivel').textContent=fmtShort(comb);
   document.getElementById('stat-corridas-mes').textContent=corridas;
   document.getElementById('stat-outras').textContent=fmtShort(despesas-comb);
+
+  const totalKm=gM.reduce((a,x)=>a+(x.km||0),0);
+  const totalHoras=gM.reduce((a,x)=>a+(x.horas||0),0);
+  const hasKm=gM.some(x=>x.km>0);
+  const hasHoras=gM.some(x=>x.horas>0);
+  const kmBlock=document.getElementById('stats-km-horas');
+  kmBlock.style.display=(hasKm||hasHoras)?'grid':'none';
+  if(hasKm||hasHoras){
+    document.getElementById('stat-km-total').textContent=hasKm?Math.round(totalKm)+' km':'—';
+    document.getElementById('stat-por-hora').textContent=(hasHoras&&ganhos>0)?fmtShort(ganhos/totalHoras)+'/h':'—';
+    document.getElementById('stat-km-corrida').textContent=(hasKm&&corridas>0)?Math.round(totalKm/corridas)+' km':'—';
+    document.getElementById('stat-horas-total').textContent=hasHoras?totalHoras.toFixed(1)+'h':'—';
+  }
 
   const meta=data.metas.ganho_mes||0;
   const goalPct=meta>0?Math.min(100,Math.round((ganhos/meta)*100)):0;
@@ -768,7 +820,13 @@ function renderHistorico(){
   const hl=document.getElementById('hist-list');
   if(!all.length){hl.innerHTML='<div class="empty"><div class="empty-text">Nenhum registro no período</div></div>';return}
   hl.innerHTML=all.map(x=>{
-    if(x.tipo==='g') return `<div class="list-item"><div class="item-icon green">${svgUp}</div><div class="item-info"><div class="item-name">${x.plataforma}</div><div class="item-meta">${x.corridas} corrida${x.corridas>1?'s':''} · ${x.obs||''} · ${x.data}</div></div><div style="display:flex;align-items:center;gap:8px"><div class="item-amount g">${fmt(x.valor)}</div><button class="item-delete" onclick="window.excluir('g','${x.id}')">✕</button></div></div>`;
+    if(x.tipo==='g'){
+      const extras=[];
+      if(x.km>0) extras.push(x.km+'km');
+      if(x.horas>0) extras.push(x.horas+'h');
+      const extStr=extras.length?' · '+extras.join(' · '):'';
+      return `<div class="list-item"><div class="item-icon green">${svgUp}</div><div class="item-info"><div class="item-name">${x.plataforma}</div><div class="item-meta">${x.corridas} corrida${x.corridas>1?'s':''}${extStr} · ${x.data}</div></div><div style="display:flex;align-items:center;gap:8px"><div class="item-amount g">${fmt(x.valor)}</div><button class="item-delete" onclick="window.excluir('g','${x.id}')">✕</button></div></div>`;
+    }
     const cat=x.categoria.replace(/^[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}]\s*/u,'');
     return `<div class="list-item"><div class="item-icon red">${svgDown}</div><div class="item-info"><div class="item-name">${cat}</div><div class="item-meta">${x.desc||''} · ${x.data}</div></div><div style="display:flex;align-items:center;gap:8px"><div class="item-amount r">-${fmt(x.valor)}</div><button class="item-delete" onclick="window.excluir('d','${x.id}')">✕</button></div></div>`;
   }).join('');
@@ -841,6 +899,23 @@ function renderFinanceiro(){
     </div>`;
   }).join('');
 }
+
+// ── EXPORT ───────────────────────────────────────────────────────────────────
+window.exportarCSV = ()=>{
+  if(!currentUser) return;
+  const rows=[['Tipo','Data','Plataforma/Categoria','Valor (R$)','Corridas','Km','Horas','Descrição']];
+  [...data.ganhos].sort((a,b)=>(a.data||'').localeCompare(b.data||'')).forEach(x=>{
+    rows.push(['Ganho',x.data||'',x.plataforma||'',x.valor.toFixed(2),x.corridas||1,x.km||'',x.horas||'',x.obs||'']);
+  });
+  [...data.despesas].sort((a,b)=>(a.data||'').localeCompare(b.data||'')).forEach(x=>{
+    rows.push(['Despesa',x.data||'',x.categoria||'',x.valor.toFixed(2),'','','',x.desc||'']);
+  });
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=`gigtrack-${thisMonth()}.csv`; a.click();
+  showToast('✓ Relatório exportado!');
+};
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 document.getElementById('reg-data').value=today();

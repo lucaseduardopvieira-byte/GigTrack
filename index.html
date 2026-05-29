@@ -187,6 +187,20 @@ select.form-input{appearance:none;cursor:pointer}
 
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .page.active .card,.page.active .hero,.page.active .stats{animation:fadeIn .25s ease both}
+
+@keyframes confettiFall{
+  0%{opacity:1;transform:translateY(-10px) translateX(0) rotate(0deg) scale(1)}
+  85%{opacity:1}
+  100%{opacity:0;transform:translateY(108vh) translateX(var(--drift,0px)) rotate(var(--rot,360deg)) scale(.8)}
+}
+@keyframes popIn{
+  from{opacity:0;transform:scale(.6) translateY(30px)}
+  to{opacity:1;transform:scale(1) translateY(0)}
+}
+@keyframes shimmer{
+  0%,100%{opacity:1} 50%{opacity:.6}
+}
+.cel-modal-inner{animation:popIn .45s cubic-bezier(.34,1.56,.64,1) both}
 </style>
 </head>
 <body>
@@ -522,6 +536,28 @@ select.form-input{appearance:none;cursor:pointer}
 
 <div class="toast" id="toast"></div>
 
+<!-- CELEBRATION -->
+<div id="cel-overlay" style="display:none;position:fixed;inset:0;z-index:99990;pointer-events:none;overflow:hidden" aria-hidden="true">
+  <div id="cel-confetti"></div>
+</div>
+<div id="cel-modal" style="display:none;position:fixed;inset:0;z-index:99995;background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:28px;backdrop-filter:blur(6px)" onclick="if(event.target===this)window.closeCelebration()">
+  <div class="cel-modal-inner" style="background:var(--bg2);border:1px solid rgba(251,191,36,.25);border-radius:var(--radius);padding:36px 28px 28px;text-align:center;max-width:320px;width:100%;box-shadow:0 0 60px rgba(251,191,36,.12)">
+    <div style="width:80px;height:80px;border-radius:50%;background:rgba(251,191,36,.1);border:1.5px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+        <path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+        <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+        <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>
+      </svg>
+    </div>
+    <div style="font-size:24px;font-weight:700;letter-spacing:-.6px;margin-bottom:8px">Meta Batida!</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.65;margin-bottom:20px" id="cel-msg"></div>
+    <div id="cel-amount" style="font-size:30px;font-weight:700;color:var(--accent);letter-spacing:-1.2px;margin-bottom:24px;animation:shimmer 2s ease infinite"></div>
+    <button class="btn btn-primary" onclick="window.closeCelebration()" style="font-size:15px;letter-spacing:-.1px">Arrasando! 🏆</button>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, signOut as fbSignOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
@@ -781,6 +817,7 @@ function renderDashboard(){
   const meta=data.metas.ganho_mes||0;
   const goalPct=meta>0?Math.min(100,Math.round((ganhos/meta)*100)):0;
   const goalLeft=meta>0?Math.max(0,meta-ganhos):null;
+  checkGoalCelebration(ganhos,meta);
   const circ=477.5;
   const arc=document.getElementById('goal-arc');
   const arcFill=meta>0?Math.min(goalPct/100*circ,circ):0;
@@ -920,6 +957,45 @@ function renderFinanceiro(){
       </div>
     </div>`;
   }).join('');
+}
+
+// ── CELEBRATION ──────────────────────────────────────────────────────────────
+function launchConfetti(){
+  const c=document.getElementById('cel-confetti');
+  c.innerHTML='';
+  const colors=['#00d4aa','#3b9eff','#fbbf24','#f04f5e','#a78bfa','#34d399','#ffffff','#fb923c'];
+  for(let i=0;i<65;i++){
+    const el=document.createElement('div');
+    const color=colors[i%colors.length];
+    const size=5+Math.random()*9;
+    const isRect=Math.random()>.45;
+    const x=Math.random()*100;
+    const delay=Math.random()*2.2;
+    const dur=2.2+Math.random()*2;
+    const drift=((Math.random()-.5)*260).toFixed(0);
+    const rot=(180+Math.random()*540).toFixed(0);
+    el.style.cssText=`position:absolute;left:${x}%;top:-14px;width:${isRect?size:size*.6}px;height:${isRect?size*.45:size*.6}px;background:${color};border-radius:${isRect?'2px':'50%'};--drift:${drift}px;--rot:${rot}deg;animation:confettiFall ${dur}s ${delay}s ease-in both`;
+    c.appendChild(el);
+  }
+}
+function showCelebration(ganhos,meta){
+  document.getElementById('cel-msg').textContent=`Parabéns! Você atingiu sua meta de ${fmt(meta)} neste mês. Continue assim!`;
+  document.getElementById('cel-amount').textContent=fmt(ganhos)+' faturados';
+  document.getElementById('cel-overlay').style.display='block';
+  const modal=document.getElementById('cel-modal');
+  modal.style.display='flex';
+  launchConfetti();
+}
+window.closeCelebration=()=>{
+  document.getElementById('cel-overlay').style.display='none';
+  document.getElementById('cel-modal').style.display='none';
+};
+function checkGoalCelebration(ganhos,meta){
+  if(!meta||meta<=0||ganhos<meta) return;
+  const key='gigtrack_cel_'+thisMonth();
+  if(localStorage.getItem(key)==='1') return;
+  localStorage.setItem(key,'1');
+  setTimeout(()=>showCelebration(ganhos,meta),900);
 }
 
 // ── EXPORT ───────────────────────────────────────────────────────────────────

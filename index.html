@@ -156,11 +156,20 @@ select.form-input{appearance:none;cursor:pointer}
 .pb-ifood{background:rgba(240,79,94,.1);border:1px solid rgba(240,79,94,.2);color:var(--danger)}
 .pb-outro{background:rgba(59,158,255,.1);border:1px solid rgba(59,158,255,.2);color:var(--accent3)}
 
-/* EXPENSE ROWS */
+/* EXPENSE ROW */
 .expense-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
 .expense-row:last-child{border-bottom:none}
 .expense-name{font-size:13px;font-weight:500;color:var(--text2);flex:1}
 .expense-input{width:120px;text-align:right;padding:10px 12px!important;font-size:14px!important}
+
+/* FINANÇAS */
+.health-badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.3px}
+.health-good{background:rgba(0,212,170,.1);color:var(--accent);border:1px solid rgba(0,212,170,.2)}
+.health-warn{background:rgba(245,158,11,.1);color:var(--warning);border:1px solid rgba(245,158,11,.2)}
+.health-bad{background:rgba(240,79,94,.1);color:var(--danger);border:1px solid rgba(240,79,94,.2)}
+.fin-rec-row{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--border)}
+.fin-rec-row:last-child{border-bottom:none}
+.fin-rec-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
 /* GOAL CARD */
 .goal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
@@ -367,36 +376,74 @@ select.form-input{appearance:none;cursor:pointer}
       <div class="card" id="hist-list"><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Nenhum registro</div></div></div>
     </div>
 
-    <!-- METAS -->
-    <div class="page" id="page-metas">
-      <div class="page-header"><div class="page-title">Metas</div></div>
-      <div class="card">
-        <div class="card-title">Configurar metas</div>
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Meta de Ganho/Dia (R$)</label><input type="number" class="form-input" id="meta-ganho-input" placeholder="300" inputmode="numeric"></div>
-          <div class="form-group"><label class="form-label">Limite Despesa/Dia (R$)</label><input type="number" class="form-input" id="meta-desp-input" placeholder="80" inputmode="numeric"></div>
-        </div>
-        <div class="form-group"><label class="form-label">Meta Mensal (R$)</label><input type="number" class="form-input" id="meta-mensal-input" placeholder="6000" inputmode="numeric"></div>
-        <button class="btn btn-primary" onclick="window.salvarMetas()">Salvar Metas</button>
-      </div>
-      <div class="card">
-        <div class="card-title">Progresso do Mês</div>
-        <div class="progress-wrap">
-          <div class="progress-info"><span class="progress-label">Meta Mensal de Ganho</span><span class="progress-pct" id="meta-mes-pct">0%</span></div>
-          <div class="progress-track"><div class="progress-fill" id="meta-mes-fill" style="width:0%"></div></div>
-        </div>
-        <div class="progress-wrap" style="margin-top:8px">
-          <div class="progress-info"><span class="progress-label">Limite Despesas (mês)</span><span class="progress-pct" id="meta-desp-pct" style="color:var(--warning)">0%</span></div>
-          <div class="progress-track"><div class="progress-fill" id="meta-desp-fill" style="width:0%;background:linear-gradient(90deg,var(--warning),var(--danger))"></div></div>
-        </div>
-        <div class="stats" style="margin-top:12px;margin-bottom:0">
-          <div class="stat"><div class="stat-label">Ganho Mês</div><div class="stat-value g" id="ms-ganho">R$ 0</div></div>
-          <div class="stat"><div class="stat-label">Faltam</div><div class="stat-value b" id="ms-falta">R$ 0</div></div>
+    <!-- FINANÇAS -->
+    <div class="page" id="page-financeiro">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Finanças</div>
+          <div class="page-sub" id="fin-period">Este mês</div>
         </div>
       </div>
+
       <div class="card">
-        <div class="card-title">Resumo de Plataformas (mês)</div>
-        <div id="platform-breakdown"><div class="empty"><div class="empty-text">Nenhum dado ainda</div></div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <span class="card-title" style="margin-bottom:0">Saúde Financeira</span>
+          <span id="fin-badge" class="health-badge health-good">—</span>
+        </div>
+        <div style="display:flex">
+          <div style="flex:1;border-right:1px solid var(--border);padding-right:12px">
+            <div class="goal-lbl">Faturamento</div>
+            <div id="fin-fat" style="font-size:18px;font-weight:700;color:var(--accent);letter-spacing:-.5px;margin-top:3px">R$ 0</div>
+          </div>
+          <div style="flex:1;padding:0 12px;border-right:1px solid var(--border)">
+            <div class="goal-lbl">Despesas</div>
+            <div id="fin-desp" style="font-size:18px;font-weight:700;color:var(--danger);letter-spacing:-.5px;margin-top:3px">R$ 0</div>
+          </div>
+          <div style="flex:1;padding-left:12px">
+            <div class="goal-lbl">Líquido</div>
+            <div id="fin-liq" style="font-size:18px;font-weight:700;letter-spacing:-.5px;margin-top:3px">R$ 0</div>
+          </div>
+        </div>
+        <div style="margin-top:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+            <span style="font-size:12px;color:var(--text2);font-weight:500">Índice de despesas</span>
+            <span id="fin-idx" style="font-size:12px;font-weight:600">0%</span>
+          </div>
+          <div class="progress-track"><div id="fin-idx-bar" style="height:100%;border-radius:3px;transition:.6s;width:0%"></div></div>
+          <div id="fin-idx-msg" style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.5">—</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:4px">Como distribuir seus ganhos</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:16px;line-height:1.5">Recomendações baseadas no faturamento do mês</div>
+        <div id="fin-recs"><div class="empty"><div class="empty-text">Nenhum ganho registrado ainda</div></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Indicadores do Mês</div>
+        <div class="stats" style="margin-bottom:0">
+          <div class="stat">
+            <div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+            <div class="stat-label">Ganho / Corrida</div>
+            <div class="stat-value g" id="fin-por-corrida">R$ 0</div>
+          </div>
+          <div class="stat">
+            <div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="#3b9eff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10M18 20V4M6 20v-4"/></svg></div>
+            <div class="stat-label">Margem Líquida</div>
+            <div class="stat-value b" id="fin-margem">0%</div>
+          </div>
+          <div class="stat">
+            <div class="stat-icon yellow"><svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg></div>
+            <div class="stat-label">% Combustível</div>
+            <div class="stat-value y" id="fin-pct-comb">0%</div>
+          </div>
+          <div class="stat">
+            <div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+            <div class="stat-label">Projeção Anual</div>
+            <div class="stat-value g" id="fin-projecao">R$ 0</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -415,9 +462,9 @@ select.form-input{appearance:none;cursor:pointer}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10h18M3 6h18M3 14h12M3 18h8"/></svg>
       Histórico
     </button>
-    <button class="nav-btn" onclick="window.showPage('metas',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-      Metas
+    <button class="nav-btn" onclick="window.showPage('financeiro',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+      Finanças
     </button>
   </nav>
 </div>
@@ -501,16 +548,16 @@ window.handleSignOut = () => { if(confirm('Deseja sair da sua conta?')) fbSignOu
 function subscribeToData(){
   const unsubMetas = onSnapshot(uDoc('config','metas'), snap=>{
     if(snap.exists()) data.metas = snap.data();
-    renderDashboard(); renderMetas();
+    renderDashboard();
   });
   const unsubGanhos = onSnapshot(uCol('ganhos'), snap=>{
     data.ganhos = snap.docs.map(d=>({id:d.id,...d.data()}));
     if(firstLoad && !snap.metadata.fromCache){ firstLoad=false; if(snap.empty) migrateFromLocalStorage(); }
-    renderDashboard(); renderHistorico();
+    renderDashboard(); renderHistorico(); renderFinanceiro();
   });
   const unsubDespesas = onSnapshot(uCol('despesas'), snap=>{
     data.despesas = snap.docs.map(d=>({id:d.id,...d.data()}));
-    renderDashboard(); renderHistorico();
+    renderDashboard(); renderHistorico(); renderFinanceiro();
   });
   unsubscribers = [unsubMetas, unsubGanhos, unsubDespesas];
 }
@@ -563,7 +610,7 @@ window.showPage = (name,btn)=>{
   btn.classList.add('active');
   if(name==='dashboard') renderDashboard();
   if(name==='historico') renderHistorico();
-  if(name==='metas') renderMetas();
+  if(name==='financeiro') renderFinanceiro();
 };
 window.selectChip = (el,group)=>{
   el.closest('.chips').querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
@@ -609,17 +656,6 @@ window.salvarDia = ()=>{
   document.getElementById('reg-corridas').value='1';
   document.getElementById('exp-comb').value='';
   showToast(`✓ ${saved} registro${saved>1?'s':''} salvos!`);
-};
-window.salvarMetas = ()=>{
-  if(!currentUser) return;
-  const g=parseFloat(document.getElementById('meta-ganho-input').value);
-  const d=parseFloat(document.getElementById('meta-desp-input').value);
-  const m=parseFloat(document.getElementById('meta-mensal-input').value);
-  if(g) data.metas.ganho_dia=g;
-  if(d) data.metas.desp_dia=d;
-  if(m) data.metas.ganho_mes=m;
-  setDoc(uDoc('config','metas'),data.metas);
-  renderMetas(); showToast('✓ Metas salvas!');
 };
 window.excluir = (tipo,id)=>{
   if(!currentUser) return;
@@ -738,36 +774,71 @@ function renderHistorico(){
   }).join('');
 }
 
-// ── RENDER METAS ──────────────────────────────────────────────────────────────
-function renderMetas(){
-  document.getElementById('meta-ganho-input').value=data.metas.ganho_dia;
-  document.getElementById('meta-desp-input').value=data.metas.desp_dia;
-  document.getElementById('meta-mensal-input').value=data.metas.ganho_mes;
+// ── RENDER FINANÇAS ───────────────────────────────────────────────────────────
+function renderFinanceiro(){
+  const gM=filterByPeriod(data.ganhos,'mes');
+  const dM=filterByPeriod(data.despesas,'mes');
+  const ganhos=gM.reduce((a,x)=>a+x.valor,0);
+  const despesas=dM.reduce((a,x)=>a+x.valor,0);
+  const lucro=ganhos-despesas;
+  const corridas=gM.reduce((a,x)=>a+x.corridas,0);
+  const comb=dM.filter(x=>x.categoria?.includes('Combustível')).reduce((a,x)=>a+x.valor,0);
+  const idxDesp=ganhos>0?Math.min(100,Math.round((despesas/ganhos)*100)):0;
+  const margem=ganhos>0?Math.round((lucro/ganhos)*100):0;
+  const mesNome=new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
 
-  const gMes=data.ganhos.filter(x=>x.data?.startsWith(thisMonth())).reduce((a,x)=>a+x.valor,0);
-  const dMes=data.despesas.filter(x=>x.data?.startsWith(thisMonth())).reduce((a,x)=>a+x.valor,0);
-  const limDesp=data.metas.desp_dia*30;
-  const pct=Math.min(100,Math.round((gMes/data.metas.ganho_mes)*100));
-  const dpct=Math.min(100,Math.round((dMes/limDesp)*100));
-  document.getElementById('meta-mes-pct').textContent=pct+'%';
-  document.getElementById('meta-mes-fill').style.width=pct+'%';
-  document.getElementById('meta-desp-pct').textContent=dpct+'%';
-  document.getElementById('meta-desp-fill').style.width=dpct+'%';
-  document.getElementById('ms-ganho').textContent=fmt(gMes);
-  document.getElementById('ms-falta').textContent=fmt(Math.max(0,data.metas.ganho_mes-gMes));
+  document.getElementById('fin-period').textContent=mesNome.charAt(0).toUpperCase()+mesNome.slice(1);
+  document.getElementById('fin-fat').textContent=fmt(ganhos);
+  document.getElementById('fin-desp').textContent=fmt(despesas);
+  const liqEl=document.getElementById('fin-liq');
+  liqEl.textContent=fmt(lucro);
+  liqEl.style.color=lucro>=0?'var(--accent)':'var(--danger)';
 
-  const plats={};
-  data.ganhos.filter(x=>x.data?.startsWith(thisMonth())).forEach(x=>{
-    if(!plats[x.plataforma]) plats[x.plataforma]={total:0,corridas:0};
-    plats[x.plataforma].total+=x.valor; plats[x.plataforma].corridas+=x.corridas;
-  });
-  const total=Object.values(plats).reduce((a,x)=>a+x.total,0);
-  const pb=document.getElementById('platform-breakdown');
-  const keys=Object.keys(plats);
-  if(!keys.length){pb.innerHTML='<div class="empty"><div class="empty-text">Nenhum dado no mês</div></div>';return}
-  pb.innerHTML=keys.sort((a,b)=>plats[b].total-plats[a].total).map(p=>{
-    const pt=total>0?Math.round((plats[p].total/total)*100):0;
-    return `<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:13px;font-weight:600">${p} <span class="platform-badge ${pbClass(p)}">${p}</span></span><span style="font-size:13px;font-family:var(--mono);color:var(--accent)">${fmt(plats[p].total)}</span></div><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:6px;background:var(--bg4);border-radius:3px"><div style="width:${pt}%;height:100%;background:var(--accent);border-radius:3px"></div></div><span style="font-size:11px;color:var(--text2);min-width:28px">${pt}%</span></div><div style="font-size:11px;color:var(--text2);margin-top:3px">${plats[p].corridas} corrida${plats[p].corridas>1?'s':''}</div></div>`;
+  const badge=document.getElementById('fin-badge');
+  let health,hClass,hMsg;
+  if(ganhos===0){health='—';hClass='health-good';hMsg='Registre seus ganhos para ver a análise.';}
+  else if(idxDesp<=20){health='Ótima';hClass='health-good';hMsg='Suas despesas estão sob controle. Continue assim!';}
+  else if(idxDesp<=35){health='Atenção';hClass='health-warn';hMsg='Despesas acima do ideal. Tente reduzir o consumo de combustível.';}
+  else{health='Crítica';hClass='health-bad';hMsg='Despesas muito altas. Revise seus gastos — mais de 35% do faturamento está indo para custos.';}
+  badge.textContent=health; badge.className='health-badge '+hClass;
+
+  const idxEl=document.getElementById('fin-idx');
+  const barColor=idxDesp<=20?'var(--accent)':idxDesp<=35?'var(--warning)':'var(--danger)';
+  idxEl.textContent=idxDesp+'%'; idxEl.style.color=barColor;
+  const bar=document.getElementById('fin-idx-bar');
+  bar.style.width=idxDesp+'%'; bar.style.background=barColor;
+  document.getElementById('fin-idx-msg').textContent=hMsg;
+
+  const margemEl=document.getElementById('fin-margem');
+  margemEl.textContent=margem+'%';
+  margemEl.className='stat-value '+(margem>=70?'g':margem>=50?'b':'r');
+  document.getElementById('fin-por-corrida').textContent=corridas>0?fmtShort(ganhos/corridas):'R$ 0';
+  document.getElementById('fin-pct-comb').textContent=ganhos>0?Math.round(comb/ganhos*100)+'%':'0%';
+  document.getElementById('fin-projecao').textContent=fmtShort(ganhos*12);
+
+  const recsEl=document.getElementById('fin-recs');
+  if(ganhos<=0){recsEl.innerHTML='<div class="empty"><div class="empty-text">Nenhum ganho registrado ainda</div></div>';return}
+
+  const recs=[
+    {label:'Renda pessoal',pct:55,color:'#00d4aa',desc:'O que sobra para você usar livremente'},
+    {label:'Combustível',pct:15,color:'#f59e0b',desc:`Reserva recomendada · Gasto real: ${fmtShort(comb)}`},
+    {label:'Manutenção do veículo',pct:10,color:'#3b9eff',desc:'Guarde para revisões e imprevistos com o carro'},
+    {label:'Fundo de emergência',pct:10,color:'#a78bfa',desc:'Reserva para saúde, multas e situações inesperadas'},
+    {label:'Investimento',pct:10,color:'#34d399',desc:'Faça seu dinheiro crescer com o tempo'},
+  ];
+  recsEl.innerHTML=recs.map(r=>{
+    const val=ganhos*r.pct/100;
+    return `<div class="fin-rec-row">
+      <div class="fin-rec-dot" style="background:${r.color}"></div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${r.label}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${r.desc}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:11px;font-weight:500;color:var(--text3)">${r.pct}%</div>
+        <div style="font-size:16px;font-weight:700;color:${r.color};letter-spacing:-.4px">${fmtShort(val)}</div>
+      </div>
+    </div>`;
   }).join('');
 }
 

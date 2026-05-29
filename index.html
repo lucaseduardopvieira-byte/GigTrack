@@ -240,6 +240,47 @@ select.form-input{appearance:none;cursor:pointer}
         <button class="user-bar-btn" onclick="window.handleSignOut()">Sair</button>
       </div>
 
+      <div class="card" id="goal-card">
+        <div class="goal-head">
+          <span class="card-title" style="margin-bottom:0">Meta de Faturamento</span>
+          <button class="goal-edit-btn" id="goal-edit-btn" onclick="window.toggleGoalEdit()">Definir</button>
+        </div>
+        <div id="goal-view">
+          <div style="display:flex;flex-direction:column;align-items:center;padding:12px 0 18px">
+            <div style="position:relative;width:190px;height:190px">
+              <svg width="190" height="190" viewBox="0 0 190 190" style="display:block">
+                <circle cx="95" cy="95" r="76" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="13"/>
+                <circle id="goal-arc" cx="95" cy="95" r="76" fill="none" stroke="#ffffff" stroke-width="13"
+                  stroke-linecap="round" stroke-dasharray="0 477.5" transform="rotate(-90 95 95)"
+                  style="transition:stroke-dasharray .7s ease,stroke .4s ease"/>
+              </svg>
+              <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px">
+                <div id="goal-pct-center" style="font-size:36px;font-weight:700;letter-spacing:-1.5px;color:#fff;line-height:1">—</div>
+                <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">concluído</div>
+              </div>
+            </div>
+            <div id="goal-meta-lbl" style="font-size:12px;color:var(--text3);margin-top:8px;letter-spacing:-.1px">Nenhuma meta definida</div>
+          </div>
+          <div style="display:flex;padding-top:14px;border-top:1px solid var(--border)">
+            <div style="flex:1;text-align:center">
+              <div class="goal-lbl">Realizado</div>
+              <div class="goal-val g" id="goal-real" style="font-size:17px">R$ 0</div>
+            </div>
+            <div style="flex:1;text-align:center;border-left:1px solid var(--border)">
+              <div class="goal-lbl">Faltam</div>
+              <div class="goal-val" id="goal-left" style="font-size:17px">—</div>
+            </div>
+          </div>
+        </div>
+        <div id="goal-form" style="display:none">
+          <div class="form-group" style="margin-bottom:10px">
+            <label class="form-label">Meta mensal de faturamento (R$)</label>
+            <input type="number" class="form-input" id="goal-input-dash" placeholder="Ex: 6000" inputmode="numeric">
+          </div>
+          <button class="btn btn-primary" style="font-size:14px;padding:12px" onclick="window.saveGoalDash()">Salvar Meta</button>
+        </div>
+      </div>
+
       <div class="hero">
         <div class="hero-label">Lucro Líquido</div>
         <div class="hero-value" id="hero-lucro">R$ 0,00</div>
@@ -256,29 +297,6 @@ select.form-input{appearance:none;cursor:pointer}
             <div class="hero-meta-label">Corridas no Mês</div>
             <div class="hero-meta-value b" id="hero-corridas">0</div>
           </div>
-        </div>
-      </div>
-
-      <div class="card" id="goal-card">
-        <div class="goal-head">
-          <span class="card-title" style="margin-bottom:0">Meta de Faturamento</span>
-          <button class="goal-edit-btn" id="goal-edit-btn" onclick="window.toggleGoalEdit()">Definir</button>
-        </div>
-        <div id="goal-view">
-          <div class="goal-amount undefined" id="goal-amount-display">Nenhuma meta definida</div>
-          <div class="progress-track"><div class="progress-fill" id="goal-bar" style="width:0%"></div></div>
-          <div class="goal-row">
-            <div><div class="goal-lbl">Realizado</div><div class="goal-val g" id="goal-real">R$ 0</div></div>
-            <div><div class="goal-lbl">Faltam</div><div class="goal-val" id="goal-left">—</div></div>
-            <div><div class="goal-lbl">Concluído</div><div class="goal-val g" id="goal-pct-val">—</div></div>
-          </div>
-        </div>
-        <div id="goal-form" style="display:none">
-          <div class="form-group" style="margin-bottom:10px">
-            <label class="form-label">Meta mensal de faturamento (R$)</label>
-            <input type="number" class="form-input" id="goal-input-dash" placeholder="Ex: 6000" inputmode="numeric">
-          </div>
-          <button class="btn btn-primary" style="font-size:14px;padding:12px" onclick="window.saveGoalDash()">Salvar Meta</button>
         </div>
       </div>
 
@@ -763,13 +781,17 @@ function renderDashboard(){
   const meta=data.metas.ganho_mes||0;
   const goalPct=meta>0?Math.min(100,Math.round((ganhos/meta)*100)):0;
   const goalLeft=meta>0?Math.max(0,meta-ganhos):null;
-  const amtEl=document.getElementById('goal-amount-display');
-  amtEl.textContent=meta>0?fmt(meta):'Nenhuma meta definida';
-  amtEl.className='goal-amount'+(meta>0?'':' undefined');
-  document.getElementById('goal-bar').style.width=goalPct+'%';
+  const circ=477.5;
+  const arc=document.getElementById('goal-arc');
+  const arcFill=meta>0?Math.min(goalPct/100*circ,circ):0;
+  arc.setAttribute('stroke-dasharray',`${arcFill.toFixed(1)} ${circ}`);
+  arc.setAttribute('stroke',goalPct>=100?'var(--accent)':'#ffffff');
+  const pctCenterEl=document.getElementById('goal-pct-center');
+  pctCenterEl.textContent=meta>0?goalPct+'%':'—';
+  pctCenterEl.style.color=goalPct>=100?'var(--accent)':'#ffffff';
+  document.getElementById('goal-meta-lbl').textContent=meta>0?'Meta: '+fmt(meta):'Nenhuma meta definida';
   document.getElementById('goal-real').textContent=fmt(ganhos);
   document.getElementById('goal-left').textContent=goalLeft!==null?fmt(goalLeft):'—';
-  document.getElementById('goal-pct-val').textContent=meta>0?goalPct+'%':'—';
   document.getElementById('goal-edit-btn').textContent=meta>0?'Editar':'Definir';
 
   const svgUp=`<svg viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>`;

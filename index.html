@@ -501,6 +501,14 @@ select.form-input{appearance:none;cursor:pointer}
         </div>
       </div>
 
+      <div class="card" id="fin-insights-card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:14px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <span class="card-title" style="margin-bottom:0">Análise Inteligente</span>
+        </div>
+        <div id="fin-insights-list"></div>
+      </div>
+
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
           <span class="card-title" style="margin-bottom:0">Saúde Financeira</span>
@@ -659,6 +667,7 @@ let dashMonth = '';
 let finMonth = '';
 let histMonth = '';
 let shouldAnimateInsights = true;
+let shouldAnimateFinInsights = true;
 let unsubscribers = [];
 let firstLoad = true;
 
@@ -769,7 +778,7 @@ window.showPage = (name,btn)=>{
   btn.classList.add('active');
   if(name==='dashboard'){shouldAnimateInsights=true;renderDashboard();}
   if(name==='historico') renderHistorico();
-  if(name==='financeiro') renderFinanceiro();
+  if(name==='financeiro'){shouldAnimateFinInsights=true;renderFinanceiro();}
 };
 window.changeDashMonth = (dir)=>{
   const [y,m]=dashMonth.split('-').map(Number);
@@ -786,6 +795,7 @@ window.changeFinMonth = (dir)=>{
   const nm=d.toISOString().slice(0,7);
   if(nm>thisMonth()) return;
   finMonth=nm;
+  shouldAnimateFinInsights=true;
   renderFinanceiro();
 };
 window.changeHistMonth = (dir)=>{
@@ -1025,8 +1035,8 @@ function renderInsights(){
     });
   }
 }
-function animateInsights(){
-  const rows=document.querySelectorAll('#insights-list .insight-row');
+function animateInsights(listId='insights-list'){
+  const rows=document.querySelectorAll('#'+listId+' .insight-row');
   rows.forEach((row,rowIdx)=>{
     const titleEl=row.querySelector('.insight-title');
     const descEl=row.querySelector('.insight-desc');
@@ -1240,6 +1250,7 @@ function renderFinanceiro(){
   document.getElementById('fin-pct-comb').textContent=ganhos>0?Math.round(comb/ganhos*100)+'%':'0%';
   document.getElementById('fin-projecao').textContent=fmtShort(ganhos*12);
 
+  renderFinInsights();
   const recsEl=document.getElementById('fin-recs');
   if(ganhos<=0){recsEl.innerHTML='<div class="empty"><div class="empty-text">Nenhum ganho registrado ainda</div></div>';return}
 
@@ -1264,6 +1275,89 @@ function renderFinanceiro(){
       </div>
     </div>`;
   }).join('');
+}
+
+// ── INSIGHTS FINANÇAS ─────────────────────────────────────────────────────────
+function renderFinInsights(){
+  const el=document.getElementById('fin-insights-list');
+  if(!el) return;
+  if(!finMonth) finMonth=thisMonth();
+  const [fy,fm]=finMonth.split('-').map(Number);
+  const prevDate=new Date(fy,fm-2,1);
+  const prev=prevDate.toISOString().slice(0,7);
+  const gAll=data.ganhos;
+  const gCurr=gAll.filter(x=>x.data?.startsWith(finMonth));
+  const gPrev=gAll.filter(x=>x.data?.startsWith(prev));
+  const dCurr=data.despesas.filter(x=>x.data?.startsWith(finMonth));
+  const totalCurr=gCurr.reduce((a,x)=>a+x.valor,0);
+  const totalPrev=gPrev.reduce((a,x)=>a+x.valor,0);
+  const combCurr=dCurr.filter(x=>x.categoria?.includes('Combustível')).reduce((a,x)=>a+x.valor,0);
+  const insights=[];
+
+  if(totalPrev>0&&totalCurr>0){
+    const pct=Math.round(((totalCurr-totalPrev)/totalPrev)*100);
+    const prevNome=prevDate.toLocaleDateString('pt-BR',{month:'long'});
+    if(pct>0) insights.push({c:'var(--accent)',t:`+${pct}% comparado a ${prevNome}`,d:`Faturou mais que o mês anterior`});
+    else if(pct<-5) insights.push({c:'var(--warning)',t:`${pct}% comparado a ${prevNome}`,d:`Abaixo do faturamento de ${prevNome}`});
+  }
+
+  const meta=data.metas['ganho_mes_'+finMonth]||0;
+  const isCurrFin=finMonth===thisMonth();
+  if(meta>0&&totalCurr>0){
+    if(isCurrFin){
+      const diaAtual=new Date().getDate();
+      const diasNoMes=new Date(fy,fm,0).getDate();
+      const diasRestantes=diasNoMes-diaAtual;
+      const projetado=totalCurr+(totalCurr/diaAtual)*diasRestantes;
+      const projPct=Math.round(projetado/meta*100);
+      if(projPct>=100) insights.push({c:'var(--accent)',t:`Meta: projeção de ${projPct}%`,d:`No ritmo atual você deve superar a meta`});
+      else if(diasRestantes>0){
+        const necessario=(meta-totalCurr)/diasRestantes;
+        insights.push({c:'var(--accent3)',t:`Meta: faltam ${fmtShort(necessario)}/dia`,d:`Necessário nos próximos ${diasRestantes} dias para bater a meta`});
+      }
+    } else {
+      const achieved=Math.round(totalCurr/meta*100);
+      if(achieved>=100) insights.push({c:'var(--accent)',t:`Meta atingida: ${achieved}%`,d:`Você superou a meta de ${fmt(meta)} neste mês`});
+      else insights.push({c:'var(--warning)',t:`Meta: ${achieved}% atingido`,d:`Faturou ${fmt(totalCurr)} de ${fmt(meta)} definido`});
+    }
+  }
+
+  if(totalCurr>0&&combCurr>0){
+    const pctComb=Math.round(combCurr/totalCurr*100);
+    if(pctComb>25) insights.push({c:'var(--danger)',t:`Combustível em ${pctComb}% do faturamento`,d:`Acima do ideal de 20% — considere otimizar rotas`});
+    else insights.push({c:'var(--accent)',t:`Combustível controlado: ${pctComb}%`,d:`Dentro do recomendado (até 20% do faturamento)`});
+  }
+
+  if(gAll.length>=14){
+    const soma=[0,0,0,0,0,0,0],cnt=[0,0,0,0,0,0,0];
+    gAll.forEach(x=>{if(!x.data)return;const dw=new Date(x.data+'T12:00:00').getDay();soma[dw]+=x.valor;cnt[dw]++;});
+    const avg=soma.map((v,i)=>cnt[i]>0?v/cnt[i]:0);
+    const best=avg.indexOf(Math.max(...avg));
+    const dias=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+    if(avg[best]>0) insights.push({c:'var(--accent3)',t:`Melhor dia: ${dias[best]}`,d:`Média de ${fmtShort(avg[best])} — baseado em todo o histórico`});
+  }
+
+  const pSoma={},pCnt={};
+  gAll.forEach(x=>{if(!x.plataforma)return;pSoma[x.plataforma]=(pSoma[x.plataforma]||0)+x.valor;pCnt[x.plataforma]=(pCnt[x.plataforma]||0)+(x.corridas||1);});
+  const plats=Object.keys(pSoma);
+  if(plats.length>1){
+    const melhor=plats.sort((a,b)=>(pSoma[b]/pCnt[b])-(pSoma[a]/pCnt[a]))[0];
+    insights.push({c:'var(--accent3)',t:`${melhor} é sua plataforma mais rentável`,d:`Média de ${fmtShort(pSoma[melhor]/pCnt[melhor])} por corrida`});
+  }
+
+  const shown=insights.slice(0,4);
+  if(!shown.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:8px 0">Registre mais dias para ver análises personalizadas</div>';return;}
+  el.innerHTML=shown.map(i=>`<div class="insight-row" style="opacity:0"><div class="insight-dot" style="background:${i.c}"></div><div style="min-width:0;flex:1"><div class="insight-title"></div><div class="insight-desc" style="opacity:0">${i.d}</div></div></div>`).join('');
+  shown.forEach((ins,i)=>{el.querySelectorAll('.insight-title')[i].dataset.full=ins.t;});
+  if(shouldAnimateFinInsights){shouldAnimateFinInsights=false;animateInsights('fin-insights-list');}
+  else{
+    el.querySelectorAll('.insight-row').forEach(row=>{
+      row.style.opacity='1';
+      const t=row.querySelector('.insight-title');
+      t.textContent=t.dataset.full;
+      row.querySelector('.insight-desc').style.opacity='1';
+    });
+  }
 }
 
 // ── CELEBRATION ──────────────────────────────────────────────────────────────

@@ -162,6 +162,14 @@ select.form-input{appearance:none;cursor:pointer}
 .expense-name{font-size:13px;font-weight:500;color:var(--text2);flex:1}
 .expense-input{width:120px;text-align:right;padding:10px 12px!important;font-size:14px!important}
 
+/* INSIGHTS */
+.insight-row{display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
+.insight-row:last-child{border-bottom:none;padding-bottom:0}
+.insight-row:first-child{padding-top:0}
+.insight-dot{width:3px;min-width:3px;border-radius:2px;align-self:stretch}
+.insight-title{font-size:13px;font-weight:600;color:var(--text);line-height:1.3}
+.insight-desc{font-size:11px;color:var(--text3);margin-top:3px;line-height:1.5}
+
 /* FINANÇAS */
 .health-badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.3px}
 .health-good{background:rgba(0,212,170,.1);color:var(--accent);border:1px solid rgba(0,212,170,.2)}
@@ -358,6 +366,14 @@ select.form-input{appearance:none;cursor:pointer}
           <div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="#3b9eff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
           <div class="stat-label">Horas no Mês</div><div class="stat-value b" id="stat-horas-total">—</div>
         </div>
+      </div>
+
+      <div class="card" id="insights-card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:14px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span class="card-title" style="margin-bottom:0">Análise Inteligente</span>
+        </div>
+        <div id="insights-list"></div>
       </div>
 
       <div class="section-header"><span class="section-title">Últimas transações</span></div>
@@ -861,6 +877,77 @@ window.saveGoalDash = ()=>{
   showToast('✓ Meta atualizada!');
 };
 
+// ── INSIGHTS ──────────────────────────────────────────────────────────────────
+function renderInsights(){
+  const el=document.getElementById('insights-list');
+  if(!el) return;
+  const current=thisMonth();
+  const [cy,cm]=current.split('-').map(Number);
+  const prevDate=new Date(cy,cm-2,1);
+  const prev=prevDate.toISOString().slice(0,7);
+  const gAll=data.ganhos;
+  const gCurr=gAll.filter(x=>x.data?.startsWith(current));
+  const gPrev=gAll.filter(x=>x.data?.startsWith(prev));
+  const dCurr=data.despesas.filter(x=>x.data?.startsWith(current));
+  const totalCurr=gCurr.reduce((a,x)=>a+x.valor,0);
+  const totalPrev=gPrev.reduce((a,x)=>a+x.valor,0);
+  const combCurr=dCurr.filter(x=>x.categoria?.includes('Combustível')).reduce((a,x)=>a+x.valor,0);
+  const insights=[];
+
+  // Tendência vs mês anterior
+  if(totalPrev>0&&totalCurr>0){
+    const pct=Math.round(((totalCurr-totalPrev)/totalPrev)*100);
+    const prevNome=prevDate.toLocaleDateString('pt-BR',{month:'long'});
+    if(pct>0) insights.push({c:'var(--accent)',t:`+${pct}% comparado a ${prevNome}`,d:`Faturando mais que o mês anterior`});
+    else if(pct<-5) insights.push({c:'var(--warning)',t:`${pct}% comparado a ${prevNome}`,d:`Abaixo do faturamento de ${prevNome}`});
+  }
+
+  // Projeção da meta
+  const meta=data.metas['ganho_mes_'+current]||0;
+  if(meta>0&&totalCurr>0){
+    const diaAtual=new Date().getDate();
+    const diasNoMes=new Date(cy,cm,0).getDate();
+    const diasRestantes=diasNoMes-diaAtual;
+    const projetado=totalCurr+(totalCurr/diaAtual)*diasRestantes;
+    const projPct=Math.round(projetado/meta*100);
+    if(projPct>=100) insights.push({c:'var(--accent)',t:`Meta: projeção de ${projPct}%`,d:`No ritmo atual você deve superar a meta`});
+    else if(diasRestantes>0){
+      const necessario=(meta-totalCurr)/diasRestantes;
+      insights.push({c:'var(--accent3)',t:`Meta: faltam ${fmtShort(necessario)}/dia`,d:`Necessário nos próximos ${diasRestantes} dias para bater a meta`});
+    }
+  }
+
+  // Combustível
+  if(totalCurr>0&&combCurr>0){
+    const pctComb=Math.round(combCurr/totalCurr*100);
+    if(pctComb>25) insights.push({c:'var(--danger)',t:`Combustível em ${pctComb}% do faturamento`,d:`Acima do ideal de 20% — considere otimizar rotas`});
+    else insights.push({c:'var(--accent)',t:`Combustível controlado: ${pctComb}%`,d:`Dentro do recomendado (até 20% do faturamento)`});
+  }
+
+  // Melhor dia da semana (histórico completo)
+  if(gAll.length>=14){
+    const soma=[0,0,0,0,0,0,0],cnt=[0,0,0,0,0,0,0];
+    gAll.forEach(x=>{if(!x.data)return;const dw=new Date(x.data+'T12:00:00').getDay();soma[dw]+=x.valor;cnt[dw]++;});
+    const avg=soma.map((v,i)=>cnt[i]>0?v/cnt[i]:0);
+    const best=avg.indexOf(Math.max(...avg));
+    const dias=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+    if(avg[best]>0) insights.push({c:'var(--accent3)',t:`Melhor dia: ${dias[best]}`,d:`Média de ${fmtShort(avg[best])} — baseado em todo o histórico`});
+  }
+
+  // Plataforma mais rentável (histórico completo)
+  const pSoma={},pCnt={};
+  gAll.forEach(x=>{if(!x.plataforma)return;pSoma[x.plataforma]=(pSoma[x.plataforma]||0)+x.valor;pCnt[x.plataforma]=(pCnt[x.plataforma]||0)+(x.corridas||1);});
+  const plats=Object.keys(pSoma);
+  if(plats.length>1){
+    const melhor=plats.sort((a,b)=>(pSoma[b]/pCnt[b])-(pSoma[a]/pCnt[a]))[0];
+    insights.push({c:'var(--accent3)',t:`${melhor} é sua plataforma mais rentável`,d:`Média de ${fmtShort(pSoma[melhor]/pCnt[melhor])} por corrida`});
+  }
+
+  const shown=insights.slice(0,4);
+  if(!shown.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:8px 0">Registre mais dias para ver análises personalizadas</div>';return;}
+  el.innerHTML=shown.map(i=>`<div class="insight-row"><div class="insight-dot" style="background:${i.c}"></div><div><div class="insight-title">${i.t}</div><div class="insight-desc">${i.d}</div></div></div>`).join('');
+}
+
 // ── RENDER DASHBOARD ──────────────────────────────────────────────────────────
 function renderDashboard(){
   if(!dashMonth) dashMonth=thisMonth();
@@ -919,6 +1006,7 @@ function renderDashboard(){
   document.getElementById('goal-real').textContent=fmt(ganhos);
   document.getElementById('goal-left').textContent=goalLeft!==null?fmt(goalLeft):'—';
   document.getElementById('goal-edit-btn').textContent=meta>0?'Editar':'Definir';
+  if(isCurrent) renderInsights();
 
   const svgUp=`<svg viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>`;
   const svgDown=`<svg viewBox="0 0 24 24" fill="none" stroke="#f04f5e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>`;

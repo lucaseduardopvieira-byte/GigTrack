@@ -270,6 +270,14 @@ select.form-input{appearance:none;cursor:pointer}
         <button class="user-bar-btn" onclick="window.handleSignOut()">Sair</button>
       </div>
 
+      <div class="card" id="insights-card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:14px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span class="card-title" style="margin-bottom:0">Análise Inteligente</span>
+        </div>
+        <div id="insights-list"></div>
+      </div>
+
       <div class="card" id="goal-card">
         <div class="goal-head">
           <span class="card-title" style="margin-bottom:0">Meta de Faturamento</span>
@@ -366,14 +374,6 @@ select.form-input{appearance:none;cursor:pointer}
           <div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="#3b9eff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
           <div class="stat-label">Horas no Mês</div><div class="stat-value b" id="stat-horas-total">—</div>
         </div>
-      </div>
-
-      <div class="card" id="insights-card" style="margin-bottom:16px">
-        <div style="display:flex;align-items:center;gap:7px;margin-bottom:14px">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span class="card-title" style="margin-bottom:0">Análise Inteligente</span>
-        </div>
-        <div id="insights-list"></div>
       </div>
 
       <div class="section-header"><span class="section-title">Últimas transações</span></div>
@@ -645,6 +645,7 @@ let histPeriod = 'todos';
 let dashMonth = '';
 let finMonth = '';
 let histMonth = '';
+let shouldAnimateInsights = true;
 let unsubscribers = [];
 let firstLoad = true;
 
@@ -751,7 +752,7 @@ window.showPage = (name,btn)=>{
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   btn.classList.add('active');
-  if(name==='dashboard') renderDashboard();
+  if(name==='dashboard'){shouldAnimateInsights=true;renderDashboard();}
   if(name==='historico') renderHistorico();
   if(name==='financeiro') renderFinanceiro();
 };
@@ -994,7 +995,40 @@ function renderInsights(){
 
   const shown=insights.slice(0,4);
   if(!shown.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:8px 0">Registre mais dias para ver análises personalizadas</div>';return;}
-  el.innerHTML=shown.map(i=>`<div class="insight-row"><div class="insight-dot" style="background:${i.c}"></div><div><div class="insight-title">${i.t}</div><div class="insight-desc">${i.d}</div></div></div>`).join('');
+  el.innerHTML=shown.map(i=>`<div class="insight-row" style="opacity:0"><div class="insight-dot" style="background:${i.c}"></div><div style="min-width:0;flex:1"><div class="insight-title"></div><div class="insight-desc" style="opacity:0">${i.d}</div></div></div>`).join('');
+  // store full titles as data attributes
+  shown.forEach((ins,i)=>{el.querySelectorAll('.insight-title')[i].dataset.full=ins.t;});
+  if(shouldAnimateInsights){shouldAnimateInsights=false;animateInsights();}
+  else{
+    // instant fill without animation (Firestore updates)
+    el.querySelectorAll('.insight-row').forEach(row=>{
+      row.style.opacity='1';
+      const t=row.querySelector('.insight-title');
+      t.textContent=t.dataset.full;
+      row.querySelector('.insight-desc').style.opacity='1';
+    });
+  }
+}
+function animateInsights(){
+  const rows=document.querySelectorAll('#insights-list .insight-row');
+  rows.forEach((row,rowIdx)=>{
+    const titleEl=row.querySelector('.insight-title');
+    const descEl=row.querySelector('.insight-desc');
+    const fullText=titleEl.dataset.full||'';
+    setTimeout(()=>{
+      row.style.transition='opacity .2s';
+      row.style.opacity='1';
+      let charIdx=0;
+      const tick=setInterval(()=>{
+        titleEl.textContent=fullText.slice(0,++charIdx);
+        if(charIdx>=fullText.length){
+          clearInterval(tick);
+          descEl.style.transition='opacity .35s';
+          descEl.style.opacity='1';
+        }
+      },22);
+    },rowIdx*180);
+  });
 }
 
 // ── RENDER DASHBOARD ──────────────────────────────────────────────────────────

@@ -594,7 +594,7 @@ function showLoginError(msg){
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let currentUser = null;
-let data = {ganhos:[],despesas:[],metas:{ganho_dia:300,desp_dia:80,ganho_mes:6000}};
+let data = {ganhos:[],despesas:[],metas:{ganho_dia:300,desp_dia:80}};
 let chartInstance = null;
 let tipoRegistro = 'ganho';
 let selectedChips = {plataforma:'Uber',categoria:'⛽ Combustível'};
@@ -621,7 +621,7 @@ onAuthStateChanged(auth, user => {
   } else {
     currentUser = null;
     unsubscribers.forEach(u=>u()); unsubscribers=[];
-    data = {ganhos:[],despesas:[],metas:{ganho_dia:300,desp_dia:80,ganho_mes:6000}};
+    data = {ganhos:[],despesas:[],metas:{ganho_dia:300,desp_dia:80}};
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('app').style.display = 'none';
     firstLoad = true;
@@ -779,9 +779,10 @@ window.toggleGoalEdit = ()=>{
   const editing=form.style.display!=='none';
   view.style.display=editing?'':'none';
   form.style.display=editing?'none':'';
-  btn.textContent=editing?(data.metas.ganho_mes?'Editar':'Definir'):'Cancelar';
+  const metaAtual=data.metas['ganho_mes_'+(dashMonth||thisMonth())]||0;
+  btn.textContent=editing?(metaAtual>0?'Editar':'Definir'):'Cancelar';
   if(!editing){
-    const v=data.metas.ganho_mes||0;
+    const v=metaAtual;
     const inp=document.getElementById('goal-input-dash');
     inp.value=v>0?v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'';
     inp.focus();
@@ -791,7 +792,8 @@ window.saveGoalDash = ()=>{
   if(!currentUser) return;
   const v=readMoney(document.getElementById('goal-input-dash'));
   if(!v||v<=0){showToast('Informe um valor válido');return}
-  data.metas.ganho_mes=v;
+  const mesAlvo=dashMonth||thisMonth();
+  data.metas['ganho_mes_'+mesAlvo]=v;
   setDoc(uDoc('config','metas'),data.metas);
   window.toggleGoalEdit();
   renderDashboard();
@@ -840,7 +842,7 @@ function renderDashboard(){
     document.getElementById('stat-horas-total').textContent=hasHoras?totalHoras.toFixed(1)+'h':'—';
   }
 
-  const meta=data.metas.ganho_mes||0;
+  const meta=data.metas['ganho_mes_'+dashMonth]||0;
   const goalPct=meta>0?Math.min(100,Math.round((ganhos/meta)*100)):0;
   const goalLeft=meta>0?Math.max(0,meta-ganhos):null;
   if(isCurrent) checkGoalCelebration(ganhos,meta);

@@ -16,3 +16,11 @@ self.addEventListener('fetch',e=>{
     caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match('index.html')))
   );
 });
+
+self.addEventListener('notificationclick',e=>{
+  e.notification.close();
+  e.waitUntil(clients.matchAll({type:'window'}).then(cs=>{
+    const c=cs.find(x=>x.focused||x.url);
+    return c?c.focus():clients.openWindow('/GigTrack/');
+  }));
+});

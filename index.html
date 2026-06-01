@@ -297,7 +297,7 @@ select.form-input{appearance:none;cursor:pointer}
         <div id="goal-form" style="display:none">
           <div class="form-group" style="margin-bottom:10px">
             <label class="form-label">Meta mensal de faturamento (R$)</label>
-            <input type="number" class="form-input" id="goal-input-dash" placeholder="Ex: 6000" inputmode="numeric">
+            <input type="text" class="form-input" id="goal-input-dash" placeholder="Ex: 6.000,00" inputmode="numeric">
           </div>
           <button class="btn btn-primary" style="font-size:14px;padding:12px" onclick="window.saveGoalDash()">Salvar Meta</button>
         </div>
@@ -781,8 +781,10 @@ window.toggleGoalEdit = ()=>{
   form.style.display=editing?'none':'';
   btn.textContent=editing?(data.metas.ganho_mes?'Editar':'Definir'):'Cancelar';
   if(!editing){
-    document.getElementById('goal-input-dash').value=data.metas.ganho_mes||'';
-    document.getElementById('goal-input-dash').focus();
+    const v=data.metas.ganho_mes||0;
+    const inp=document.getElementById('goal-input-dash');
+    inp.value=v>0?v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'';
+    inp.focus();
   }
 };
 window.saveGoalDash = ()=>{

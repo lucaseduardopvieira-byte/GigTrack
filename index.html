@@ -900,6 +900,7 @@ window.excluir = (tipo,id)=>{
   deleteDoc(uDoc(tipo==='g'?'ganhos':'despesas',String(id)));
 };
 window.toggleGoalEdit = ()=>{
+  if((dashMonth||thisMonth())!==thisMonth()) return;
   const view=document.getElementById('goal-view');
   const form=document.getElementById('goal-form');
   const btn=document.getElementById('goal-edit-btn');
@@ -1088,7 +1089,9 @@ function renderDashboard(){
   document.getElementById('goal-meta-lbl').textContent=meta>0?'Meta: '+fmt(meta):'Nenhuma meta definida';
   document.getElementById('goal-real').textContent=fmt(ganhos);
   document.getElementById('goal-left').textContent=goalLeft!==null?fmt(goalLeft):'—';
-  document.getElementById('goal-edit-btn').textContent=meta>0?'Editar':'Definir';
+  const goalEditBtn=document.getElementById('goal-edit-btn');
+  goalEditBtn.textContent=meta>0?'Editar':'Definir';
+  goalEditBtn.style.display=isCurrent?'':'none';
   if(isCurrent) renderInsights();
 
   const svgUp=`<svg viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>`;

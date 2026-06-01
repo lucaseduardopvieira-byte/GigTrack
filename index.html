@@ -409,7 +409,7 @@ select.form-input{appearance:none;cursor:pointer}
           </div>
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label">Horas trabalhadas <span style="color:var(--text3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">opcional</span></label>
-            <input type="number" class="form-input" id="reg-horas" placeholder="0" min="0" step="0.5" inputmode="decimal">
+            <input type="text" class="form-input" id="reg-horas" placeholder="0:00" inputmode="numeric" autocomplete="off">
           </div>
         </div>
       </div>
@@ -738,6 +738,30 @@ function applyMoneyMask(el){
 function readMoney(el){
   return parseFloat((el.value||'0').replace(/\./g,'').replace(',','.'))||0;
 }
+function applyTimeMask(el){
+  el.addEventListener('input',function(){
+    const raw=this.value.replace(/\D/g,'').slice(0,4);
+    if(!raw){this.value='';return}
+    if(raw.length<=2){this.value=raw;return}
+    const h=parseInt(raw.slice(0,raw.length-2))||0;
+    const m=Math.min(parseInt(raw.slice(-2)),59);
+    this.value=h+':'+(m<10?'0':'')+m;
+  });
+}
+function parseHoras(str){
+  if(!str) return 0;
+  str=str.trim();
+  if(str.includes(':')){
+    const[h,m]=str.split(':');
+    return (parseInt(h)||0)+(parseInt(m)||0)/60;
+  }
+  return parseFloat(str)||0;
+}
+function decimalToHHMM(h){
+  const hrs=Math.floor(h);
+  const mins=Math.round((h-hrs)*60);
+  return mins>0?hrs+'h'+String(mins).padStart(2,'0'):hrs+'h';
+}
 
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 window.salvarDia = ()=>{
@@ -746,7 +770,7 @@ window.salvarDia = ()=>{
   const ganhoValor=readMoney(document.getElementById('reg-valor'));
   const corridas=parseInt(document.getElementById('reg-corridas').value)||1;
   const km=parseFloat(document.getElementById('reg-km').value)||0;
-  const horas=parseFloat(document.getElementById('reg-horas').value)||0;
+  const horas=parseHoras(document.getElementById('reg-horas').value);
   const combValor=readMoney(document.getElementById('exp-comb'));
   let saved=0;
   if(ganhoValor>0){
@@ -839,7 +863,7 @@ function renderDashboard(){
     document.getElementById('stat-km-total').textContent=hasKm?Math.round(totalKm)+' km':'—';
     document.getElementById('stat-por-hora').textContent=(hasHoras&&ganhos>0)?fmtShort(ganhos/totalHoras)+'/h':'—';
     document.getElementById('stat-km-corrida').textContent=(hasKm&&corridas>0)?Math.round(totalKm/corridas)+' km':'—';
-    document.getElementById('stat-horas-total').textContent=hasHoras?totalHoras.toFixed(1)+'h':'—';
+    document.getElementById('stat-horas-total').textContent=hasHoras?decimalToHHMM(totalHoras):'—';
   }
 
   const meta=data.metas['ganho_mes_'+dashMonth]||0;
@@ -1047,6 +1071,7 @@ window.exportarCSV = ()=>{
 document.getElementById('reg-data').value=today();
 ['reg-valor','exp-comb','goal-input-dash']
   .forEach(id=>{ const el=document.getElementById(id); if(el) applyMoneyMask(el); });
+applyTimeMask(document.getElementById('reg-horas'));
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>

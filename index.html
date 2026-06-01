@@ -444,17 +444,32 @@ select.form-input{appearance:none;cursor:pointer}
     <!-- HISTÓRICO -->
     <div class="page" id="page-historico">
       <div class="page-header">
-        <div class="page-title">Histórico</div>
-        <div id="hist-month-nav" style="display:none;align-items:center;gap:3px">
+        <div>
+          <div class="page-title">Histórico</div>
+          <div id="hist-filter-chip" style="display:none;margin-top:5px">
+            <div style="display:inline-flex;align-items:center;gap:6px;font-size:11px;background:rgba(0,212,170,.1);color:var(--accent);border:1px solid rgba(0,212,170,.2);border-radius:20px;padding:3px 8px 3px 10px">
+              <span id="hist-chip-label">Hoje</span>
+              <button onclick="window.clearHistFilter()" style="background:none;border:none;color:var(--accent);cursor:pointer;padding:0;display:flex;align-items:center;opacity:.7"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <button id="hist-filter-btn" onclick="window.toggleHistFilter()" style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);cursor:pointer;padding:8px 13px;border-radius:var(--radius-sm);font-size:12px;font-weight:500;transition:.15s;font-family:var(--font)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          Filtrar
+        </button>
+      </div>
+      <div id="hist-filter-panel" style="display:none;background:var(--bg3);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px;border:1px solid var(--border)">
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="hist-period-tabs">
+          <button class="filter-tab active" onclick="window.setHistPeriod('todos',this)">Todos</button>
+          <button class="filter-tab" onclick="window.setHistPeriod('hoje',this)">Hoje</button>
+          <button class="filter-tab" onclick="window.setHistPeriod('semana',this)">Esta semana</button>
+          <button class="filter-tab" onclick="window.setHistPeriod('mes',this)">Por mês</button>
+        </div>
+        <div id="hist-month-nav" style="display:none;align-items:center;gap:3px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
           <button onclick="window.changeHistMonth(-1)" style="background:none;border:none;color:var(--text3);cursor:pointer;padding:5px;border-radius:6px;display:flex;align-items:center;transition:.15s"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
           <div class="badge" id="hist-badge" style="min-width:44px;text-align:center">MÊS</div>
           <button id="hist-next-btn" onclick="window.changeHistMonth(1)" style="background:none;border:none;color:var(--text3);cursor:pointer;padding:5px;border-radius:6px;display:flex;align-items:center;transition:.15s;opacity:.2;pointer-events:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
         </div>
-      </div>
-      <div class="filter-tabs" id="hist-period-tabs">
-        <button class="filter-tab active" onclick="window.setHistPeriod('hoje',this)">Hoje</button>
-        <button class="filter-tab" onclick="window.setHistPeriod('semana',this)">Semana</button>
-        <button class="filter-tab" onclick="window.setHistPeriod('mes',this)">Mês</button>
       </div>
       <div class="stats">
         <div class="stat"><div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></div><div class="stat-label">Ganhos</div><div class="stat-value g" id="hs-ganhos">R$ 0</div></div>
@@ -626,7 +641,7 @@ let data = {ganhos:[],despesas:[],metas:{ganho_dia:300,desp_dia:80}};
 let chartInstance = null;
 let tipoRegistro = 'ganho';
 let selectedChips = {plataforma:'Uber',categoria:'⛽ Combustível'};
-let histPeriod = 'hoje';
+let histPeriod = 'todos';
 let dashMonth = '';
 let finMonth = '';
 let histMonth = '';
@@ -766,18 +781,52 @@ window.changeHistMonth = (dir)=>{
   histMonth=nm;
   histPeriod='mes';
   document.querySelectorAll('#hist-period-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('#hist-period-tabs .filter-tab').forEach(b=>{if(b.textContent.trim()==='Mês')b.classList.add('active')});
+  document.querySelectorAll('#hist-period-tabs .filter-tab').forEach(b=>{if(b.textContent.trim()==='Por mês')b.classList.add('active')});
+  updateHistChip('mes');
   renderHistorico();
 };
 window.selectChip = (el,group)=>{
   el.closest('.chips').querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
   el.classList.add('active'); selectedChips[group]=el.textContent.trim();
 };
+function updateHistChip(p){
+  const chip=document.getElementById('hist-filter-chip');
+  const label=document.getElementById('hist-chip-label');
+  if(!chip||!label) return;
+  if(p==='todos'){chip.style.display='none';return;}
+  if(p==='mes'){
+    if(!histMonth) histMonth=thisMonth();
+    const[hy,hm]=histMonth.split('-').map(Number);
+    const n=new Date(hy,hm-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+    label.textContent=n.charAt(0).toUpperCase()+n.slice(1);
+  } else {
+    label.textContent={hoje:'Hoje',semana:'Esta semana'}[p]||p;
+  }
+  chip.style.display='';
+}
+window.toggleHistFilter = ()=>{
+  const panel=document.getElementById('hist-filter-panel');
+  const btn=document.getElementById('hist-filter-btn');
+  const open=panel.style.display!=='none';
+  panel.style.display=open?'none':'block';
+  btn.style.borderColor=open?'var(--border)':'rgba(0,212,170,.4)';
+  btn.style.color=open?'var(--text2)':'var(--accent)';
+};
+window.clearHistFilter = ()=>{
+  histPeriod='todos';
+  document.querySelectorAll('#hist-period-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#hist-period-tabs .filter-tab').forEach(b=>{if(b.textContent.trim()==='Todos')b.classList.add('active')});
+  document.getElementById('hist-filter-chip').style.display='none';
+  document.getElementById('hist-month-nav').style.display='none';
+  renderHistorico();
+};
 window.setHistPeriod = (p,btn)=>{
   histPeriod=p;
   if(p==='mes'&&!histMonth) histMonth=thisMonth();
   document.querySelectorAll('#hist-period-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active'); renderHistorico();
+  btn.classList.add('active');
+  updateHistChip(p);
+  renderHistorico();
 };
 
 // ── MONEY MASK ────────────────────────────────────────────────────────────────
@@ -1025,7 +1074,10 @@ function renderDashboard(){
 function renderHistorico(){
   if(!histMonth) histMonth=thisMonth();
   let gP,dP;
-  if(histPeriod==='mes'){
+  if(histPeriod==='todos'){
+    gP=[...data.ganhos].sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+    dP=[...data.despesas].sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+  } else if(histPeriod==='mes'){
     gP=data.ganhos.filter(x=>x.data?.startsWith(histMonth));
     dP=data.despesas.filter(x=>x.data?.startsWith(histMonth));
   } else {

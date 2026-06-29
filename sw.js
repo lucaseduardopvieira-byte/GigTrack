@@ -1,4 +1,4 @@
-const CACHE='mf-v1';
+const CACHE='mf-v2';
 const FILES=['/','index.html'];
 
 self.addEventListener('install',e=>{

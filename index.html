@@ -675,7 +675,14 @@ const uCol = (col) => collection(db,'users',currentUser.uid,col);
 const uDoc = (...p) => doc(db,'users',currentUser.uid,...p);
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
+const _loadTimeout = setTimeout(()=>{
+  const ls=document.getElementById('loading-screen');
+  if(ls&&ls.style.display!=='none'){
+    ls.innerHTML='<div style="text-align:center;padding:24px"><div style="font-size:32px;margin-bottom:16px">⚠️</div><div style="font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.5">Não foi possível conectar.<br>Verifique sua internet e tente novamente.</div><button onclick="location.reload()" style="background:var(--accent);color:#000;border:none;border-radius:8px;padding:12px 28px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font)">Tentar novamente</button></div>';
+  }
+},10000);
 onAuthStateChanged(auth, user => {
+  clearTimeout(_loadTimeout);
   document.getElementById('loading-screen').style.display = 'none';
   if(user){
     currentUser = user;
